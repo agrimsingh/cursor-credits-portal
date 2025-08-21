@@ -1,0 +1,117 @@
+---
+alwaysApply: true
+---
+
+# Global Project Principles (Cursor Credits Distribution App)
+
+## Brief Vision
+Deliver a friction-free, self-service portal for distributing Cursor credits at meet-ups & hackathons. Built with Next.js 15 (App Router) + Firebase, styled with shadcn/ui + TailwindCSS, it must feel as thoughtful as an Apple product—simple, fast, and delightful.
+
+## Guiding Philosophy
+1. **Focus** – Solve one problem brilliantly: credit redemption & tracking.  
+2. **Elegance** – Small, composable pieces over monoliths.  
+3. **Trust** – Data integrity & privacy are first-class concerns.  
+4. **Reuse** – Shareable code & rules so any ambassador can fork & run.
+
+## Repository Structure
+```
+root
+ ├─ .cursor/rules/        ← design & code standards
+ ├─ src/                  ← application code
+ │   ├─ app/              ← Next.js route handlers & pages (app router)
+ │   ├─ components/       ← UI primitives (shadcn cloned components)
+ │   ├─ features/         ← domain slices (codes, attendees, auth…)
+ │   ├─ lib/              ← shared utils, hooks, Firebase helpers
+ ├─ public/               ← static assets
+ ├─ test_files/           ← sample CSVs
+ └─ README_PRD.txt        ← evolving product spec
+```
+
+## Code-Style & Best Practices
+- TypeScript strict mode, eslint-config-next + @typescript-eslint + Prettier.
+- 80 char soft wrap, 2-space indent.
+- Limit any file to ≤500 LOC; refactor into smaller modules before exceeding.
+- One top-level export per file when possible.
+- Favour pure functions; side-effects isolated in dedicated modules.
+- Prefer async/await; avoid `then` chains.
+- **Always comment why & how, not what.**  
+  - Single-line `//` for quick notes.  
+  - Multi-line `/** … */` JSDoc3 for APIs, hooks, components.
+- Keep historical comments that remain relevant.
+- Functional React components; avoid legacy class components.
+- Naming: `camelCase` vars & funcs, `PascalCase` components, UPPER_SNAKE constants.
+
+## Workflows
+- Investigate requests thoroughly—search, grep, Context7 docs before coding.
+- Keep README_PRD.txt synced with reality; update when scope changes.
+- PRs must pass CI (type-check, lint, tests).
+- Commit messages: `<scope>: <imperative summary>`.
+
+## Dependencies (Aug 2025)
+- Next.js ^15.1.8 (`/vercel/next.js`)
+- React ^19
+- shadcn/ui ^0.9.0 (`/shadcn-ui/ui`)
+- Firebase JS SDK ^10 (`/firebase/firebase-js-sdk`)
+- TailwindCSS ^4
+
+## Principles Recap
+- Simplicity over cleverness.
+- Lean, tested, documented code.
+- Every feature traceable to the PRD.
+- If rules must evolve, notify the team and update this folder.# Global Project Principles (Cursor Credits Distribution App)
+
+## Brief Vision
+Deliver a friction-free, self-service portal for distributing Cursor credits at meet-ups & hackathons. Built with Next.js 15 (App Router) + Firebase, styled with shadcn/ui + TailwindCSS, it must feel as thoughtful as an Apple product—simple, fast, and delightful.
+
+## Guiding Philosophy
+1. **Focus** – Solve one problem brilliantly: credit redemption & tracking.  
+2. **Elegance** – Small, composable pieces over monoliths.  
+3. **Trust** – Data integrity & privacy are first-class concerns.  
+4. **Reuse** – Shareable code & rules so any ambassador can fork & run.
+
+## Repository Structure
+```
+root
+ ├─ .cursor/rules/        ← design & code standards
+ ├─ src/                  ← application code
+ │   ├─ app/              ← Next.js route handlers & pages (app router)
+ │   ├─ components/       ← UI primitives (shadcn cloned components)
+ │   ├─ features/         ← domain slices (codes, attendees, auth…)
+ │   ├─ lib/              ← shared utils, hooks, Firebase helpers
+ ├─ public/               ← static assets
+ ├─ test_files/           ← sample CSVs
+ └─ README_PRD.txt        ← evolving product spec
+```
+
+## Code-Style & Best Practices
+- TypeScript strict mode, eslint-config-next + @typescript-eslint + Prettier.
+- 80 char soft wrap, 2-space indent.
+- Limit any file to ≤500 LOC; refactor into smaller modules before exceeding.
+- One top-level export per file when possible.
+- Favour pure functions; side-effects isolated in dedicated modules.
+- Prefer async/await; avoid `then` chains.
+- **Always comment why & how, not what.**  
+  - Single-line `//` for quick notes.  
+  - Multi-line `/** … */` JSDoc3 for APIs, hooks, components.
+- Keep historical comments that remain relevant.
+- Functional React components; avoid legacy class components.
+- Naming: `camelCase` vars & funcs, `PascalCase` components, UPPER_SNAKE constants.
+
+## Workflows
+- Investigate requests thoroughly—search, grep, Context7 docs before coding.
+- Keep README_PRD.txt synced with reality; update when scope changes.
+- PRs must pass CI (type-check, lint, tests).
+- Commit messages: `<scope>: <imperative summary>`.
+
+## Dependencies (Aug 2025)
+- Next.js ^15.1.8 (`/vercel/next.js`)
+- React ^19
+- shadcn/ui ^0.9.0 (`/shadcn-ui/ui`)
+- Firebase JS SDK ^10 (`/firebase/firebase-js-sdk`)
+- TailwindCSS ^4
+
+## Principles Recap
+- Simplicity over cleverness.
+- Lean, tested, documented code.
+- Every feature traceable to the PRD.
+- If rules must evolve, notify the team and update this folder.

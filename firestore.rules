@@ -1,0 +1,57 @@
+/**
+ * Firestore Security Rules - Basic Version for Phase 1
+ * 
+ * These rules provide basic security for the MVP version.
+ * They will be enhanced in later phases with more granular permissions.
+ */
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Events collection - read-only for attendees, write for admins
+    match /events/{eventId} {
+      allow read: if true; // Public read for event info
+      allow write: if request.auth != null && 
+        request.auth.token.role in ['admin', 'organizer'];
+    }
+    
+    // Codes collection - read/write only for authenticated admins
+    match /codes/{codeId} {
+      allow read: if request.auth != null && 
+        request.auth.token.role in ['admin', 'organizer'];
+      allow write: if request.auth != null && 
+        request.auth.token.role in ['admin', 'organizer'];
+    }
+    
+    // Attendees collection - limited access
+    match /attendees/{attendeeId} {
+      // Allow reading own record
+      allow read: if request.auth != null && 
+        (request.auth.uid == resource.data.uid || 
+         request.auth.token.role in ['admin', 'organizer']);
+      
+      // Allow creating during redemption flow
+      allow create: if true; // Will be restricted in later phases
+      
+      // Admin/organizer can update
+      allow update: if request.auth != null && 
+        request.auth.token.role in ['admin', 'organizer'];
+    }
+    
+    // Redemptions collection - audit trail
+    match /redemptions/{redemptionId} {
+      allow read: if request.auth != null && 
+        request.auth.token.role in ['admin', 'organizer'];
+      allow create: if true; // Created during redemption process
+      allow update, delete: if false; // Immutable audit trail
+    }
+    
+    // User profiles collection
+    match /users/{userId} {
+      allow read, write: if request.auth != null && 
+        (request.auth.uid == userId || 
+         request.auth.token.role in ['admin', 'organizer']);
+    }
+  }
+}

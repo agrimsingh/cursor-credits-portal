@@ -1,0 +1,109 @@
+---
+alwaysApply: true
+---
+
+# Architecture, Design Patterns & Security
+
+## High-Level Architecture
+1. **Frontend** – Next.js 15 App Router, edge-capable.  
+2. **Backend** – Firebase Cloud Functions or Next.js Route Handlers for privileged ops.  
+3. **Data** – Firestore (codes, attendees, redemptions) + Storage for CSV uploads.  
+4. **Auth** – Firebase Auth (email link + claims for roles).  
+5. **Hosting** – Firebase Hosting + Vercel preview deployments.
+
+## Layering & Folders
+- `app/` – route entry points; thin controllers only.  
+- `features/<domain>/`  
+  - `components/` – UI tied to domain.  
+  - `routes/` – server actions / API handlers.  
+  - `hooks/` – data fetching, state.  
+  - `model.ts` – TS types & schema validators (Zod).  
+- `lib/` – framework-agnostic helpers (csv-parser, firebase client, analytics).
+
+## Patterns
+- **Domain-Driven feature folders**.
+- **Repository Pattern** for Firestore I/O.
+- **Command/Query Segregation** – mutations via server actions; queries via hooks.
+- **Adapter Pattern** – encapsulate 3rd-party services (CSV import, email).
+- **State** – React Context + useReducer; avoid global stores unless necessary.
+
+## Security Principles
+- Least privilege; admin actions gated by Firebase Auth role claims.
+- Firestore rules gate collections; validate locally in CI.
+- All inputs validated with Zod both client & server.
+- Store minimal PII; hash archival data when feasible.
+- HTTPS enforced; HSTS, CSP `default-src 'self'`.
+- Secrets via `.env.*`; never committed.
+
+## Performance & Scalability
+- Static-first: SSG/ISR for public pages.
+- Cache Firestore reads (SWR/React Cache).
+- Debounce/throttle expensive calls.
+- Dynamic imports + Suspense for heavy components.
+- Enable HTTP2, Brotli, `next/image` for assets.
+
+## Testing Strategy
+- Unit: Vitest + React Testing Library.
+- Integration: Playwright + Firebase Emulator Suite.
+- CI steps: type-check → lint → test→ build.
+
+## Observability
+- Structured logs to Firebase Analytics.
+- Runtime errors to Crashlytics (web).
+- Lighthouse & WebPageTest audits each release cycle.
+
+## Continuous Improvement
+- Quarterly security review vs. OWASP Top-10.
+- Review bundle analyzer stats; regressions require action.# Architecture, Design Patterns & Security
+
+## High-Level Architecture
+1. **Frontend** – Next.js 15 App Router, edge-capable.  
+2. **Backend** – Firebase Cloud Functions or Next.js Route Handlers for privileged ops.  
+3. **Data** – Firestore (codes, attendees, redemptions) + Storage for CSV uploads.  
+4. **Auth** – Firebase Auth (email link + claims for roles).  
+5. **Hosting** – Firebase Hosting + Vercel preview deployments.
+
+## Layering & Folders
+- `app/` – route entry points; thin controllers only.  
+- `features/<domain>/`  
+  - `components/` – UI tied to domain.  
+  - `routes/` – server actions / API handlers.  
+  - `hooks/` – data fetching, state.  
+  - `model.ts` – TS types & schema validators (Zod).  
+- `lib/` – framework-agnostic helpers (csv-parser, firebase client, analytics).
+
+## Patterns
+- **Domain-Driven feature folders**.
+- **Repository Pattern** for Firestore I/O.
+- **Command/Query Segregation** – mutations via server actions; queries via hooks.
+- **Adapter Pattern** – encapsulate 3rd-party services (CSV import, email).
+- **State** – React Context + useReducer; avoid global stores unless necessary.
+
+## Security Principles
+- Least privilege; admin actions gated by Firebase Auth role claims.
+- Firestore rules gate collections; validate locally in CI.
+- All inputs validated with Zod both client & server.
+- Store minimal PII; hash archival data when feasible.
+- HTTPS enforced; HSTS, CSP `default-src 'self'`.
+- Secrets via `.env.*`; never committed.
+
+## Performance & Scalability
+- Static-first: SSG/ISR for public pages.
+- Cache Firestore reads (SWR/React Cache).
+- Debounce/throttle expensive calls.
+- Dynamic imports + Suspense for heavy components.
+- Enable HTTP2, Brotli, `next/image` for assets.
+
+## Testing Strategy
+- Unit: Vitest + React Testing Library.
+- Integration: Playwright + Firebase Emulator Suite.
+- CI steps: type-check → lint → test→ build.
+
+## Observability
+- Structured logs to Firebase Analytics.
+- Runtime errors to Crashlytics (web).
+- Lighthouse & WebPageTest audits each release cycle.
+
+## Continuous Improvement
+- Quarterly security review vs. OWASP Top-10.
+- Review bundle analyzer stats; regressions require action.

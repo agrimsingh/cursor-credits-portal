@@ -1,0 +1,107 @@
+---
+alwaysApply: true
+---
+
+# UI / UX Principles
+
+## Design Ethos
+“Less, but better.” — Drawn from Apple Human Interface Guidelines.
+
+- **Clarity** – UI communicates purpose instantly; remove visual clutter.  
+- **Deference** – Content leads, chrome stays subtle; generous whitespace.  
+- **Depth** – Motion, blur, and layering reinforce hierarchy.
+
+## Visual Language
+- Typography: `Inter` → `SF Pro` fallback, 14–16 px base, rem units.  
+- Color: dual light/dark palettes (Tailwind), WCAG AA+.  
+- Icons: Lucide 1.5 px stroke.  
+- Spacing: 8-pt grid.
+
+## Component Strategy
+- Derive components from shadcn/ui and copy into `src/components/ui/` for full control.  
+- Wrap each with a local component that exposes only required props.  
+- Theme via Tailwind CSS variables; no inline styles.
+
+## Interaction
+- Animation: 250 ms, `cubic-bezier(0.22,0.61,0.36,1)`.
+- Button states: hover, focus-visible, active, disabled—distinct & accessible.
+- Forms: inline validation; display errors in SF system red.
+- **Auth requirement** – No autosuggest for the *name* field; email field autocomplete allowed.
+
+## Accessibility
+- Must pass axe-core; fix before merge.
+- Semantic HTML by default; ARIA as fallback.
+- Focus ring: 2 px `#0a84ff`.
+- Text contrast > 4.5:1.
+
+## Responsiveness
+- Mobile-first; checkpoints 320, 768, 1024, 1440 px.  
+- Use CSS container queries for complex modules.  
+- Touch targets ≥44 × 44 px.
+
+## Copy & Tone
+- Friendly, concise, second-person (“Enter your email”).  
+- Error messages actionable.
+
+## Asset Handling
+- SVGs optimized via SVGO.  
+- Images served through `next/image` with explicit `sizes`.
+
+## Theming & Modes
+- Dark mode: system preference + localStorage toggle.  
+- RTL support via Tailwind logical properties.
+
+## Review & Sign-off
+- Figma tokens sync with Tailwind theme.  
+- UI PRs require design review before merge.# UI / UX Principles
+
+## Design Ethos
+“Less, but better.” — Drawn from Apple Human Interface Guidelines.
+
+- **Clarity** – UI communicates purpose instantly; remove visual clutter.  
+- **Deference** – Content leads, chrome stays subtle; generous whitespace.  
+- **Depth** – Motion, blur, and layering reinforce hierarchy.
+
+## Visual Language
+- Typography: `Inter` → `SF Pro` fallback, 14–16 px base, rem units.  
+- Color: dual light/dark palettes (Tailwind), WCAG AA+.  
+- Icons: Lucide 1.5 px stroke.  
+- Spacing: 8-pt grid.
+
+## Component Strategy
+- Derive components from shadcn/ui and copy into `src/components/ui/` for full control.  
+- Wrap each with a local component that exposes only required props.  
+- Theme via Tailwind CSS variables; no inline styles.
+
+## Interaction
+- Animation: 250 ms, `cubic-bezier(0.22,0.61,0.36,1)`.
+- Button states: hover, focus-visible, active, disabled—distinct & accessible.
+- Forms: inline validation; display errors in SF system red.
+- **Auth requirement** – No autosuggest for the *name* field; email field autocomplete allowed.
+
+## Accessibility
+- Must pass axe-core; fix before merge.
+- Semantic HTML by default; ARIA as fallback.
+- Focus ring: 2 px `#0a84ff`.
+- Text contrast > 4.5:1.
+
+## Responsiveness
+- Mobile-first; checkpoints 320, 768, 1024, 1440 px.  
+- Use CSS container queries for complex modules.  
+- Touch targets ≥44 × 44 px.
+
+## Copy & Tone
+- Friendly, concise, second-person (“Enter your email”).  
+- Error messages actionable.
+
+## Asset Handling
+- SVGs optimized via SVGO.  
+- Images served through `next/image` with explicit `sizes`.
+
+## Theming & Modes
+- Dark mode: system preference + localStorage toggle.  
+- RTL support via Tailwind logical properties.
+
+## Review & Sign-off
+- Figma tokens sync with Tailwind theme.  
+- UI PRs require design review before merge.
