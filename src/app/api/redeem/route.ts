@@ -24,15 +24,32 @@ export async function POST(request: NextRequest) {
     // Validate input data
     const validatedData = AttendeeRedemptionSchema.parse(body);
     
+    // Handle backward compatibility: use eventId if projectId not provided
+    const projectId = validatedData.projectId || validatedData.eventId || 'sample-event-1';
+    
     // Final validation: check attendee exists and hasn't redeemed
     const attendeesRef = collection(db, 'attendees');
-    const attendeeQuery = query(
+    let attendeeQuery = query(
       attendeesRef,
+      where('projectId', '==', projectId),
       where('name', '==', validatedData.name.trim()),
       where('email', '==', validatedData.email.toLowerCase().trim())
     );
     
-    const attendeeSnapshot = await getDocs(attendeeQuery);
+    let attendeeSnapshot = await getDocs(attendeeQuery);
+    
+    // Only fall back to legacy query if we're specifically dealing with legacy eventId
+    if (attendeeSnapshot.empty && 
+        projectId === 'sample-event-1' && 
+        !validatedData.projectId && 
+        validatedData.eventId === 'sample-event-1') {
+      attendeeQuery = query(
+        attendeesRef,
+        where('name', '==', validatedData.name.trim()),
+        where('email', '==', validatedData.email.toLowerCase().trim())
+      );
+      attendeeSnapshot = await getDocs(attendeeQuery);
+    }
     
     if (attendeeSnapshot.empty) {
       const response: ApiResponse = {
@@ -48,13 +65,28 @@ export async function POST(request: NextRequest) {
     
     // Check if already redeemed
     const redemptionsRef = collection(db, 'redemptions');
-    const existingRedemptionQuery = query(
+    let existingRedemptionQuery = query(
       redemptionsRef,
+      where('projectId', '==', projectId),
       where('attendeeName', '==', validatedData.name.trim()),
-      where('email', '==', validatedData.email.toLowerCase().trim())
+      where('attendeeEmail', '==', validatedData.email.toLowerCase().trim())
     );
     
-    const existingRedemptionSnapshot = await getDocs(existingRedemptionQuery);
+    let existingRedemptionSnapshot = await getDocs(existingRedemptionQuery);
+    
+    // Only fall back to legacy query if we're specifically dealing with legacy eventId
+    // and there's no specific projectId in the request
+    if (existingRedemptionSnapshot.empty && 
+        projectId === 'sample-event-1' && 
+        !validatedData.projectId && 
+        validatedData.eventId === 'sample-event-1') {
+      existingRedemptionQuery = query(
+        redemptionsRef,
+        where('attendeeName', '==', validatedData.name.trim()),
+        where('attendeeEmail', '==', validatedData.email.toLowerCase().trim())
+      );
+      existingRedemptionSnapshot = await getDocs(existingRedemptionQuery);
+    }
     
     if (!existingRedemptionSnapshot.empty) {
       const response: ApiResponse = {
@@ -67,12 +99,25 @@ export async function POST(request: NextRequest) {
     
     // Get available code
     const codesRef = collection(db, 'codes');
-    const availableCodesQuery = query(
+    let availableCodesQuery = query(
       codesRef,
+      where('projectId', '==', projectId),
       where('isRedeemed', '==', false)
     );
     
-    const availableCodesSnapshot = await getDocs(availableCodesQuery);
+    let availableCodesSnapshot = await getDocs(availableCodesQuery);
+    
+    // Only fall back to legacy codes if we're specifically dealing with legacy eventId
+    if (availableCodesSnapshot.empty && 
+        projectId === 'sample-event-1' && 
+        !validatedData.projectId && 
+        validatedData.eventId === 'sample-event-1') {
+      availableCodesQuery = query(
+        codesRef,
+        where('isRedeemed', '==', false)
+      );
+      availableCodesSnapshot = await getDocs(availableCodesQuery);
+    }
     
     console.log(`Found ${availableCodesSnapshot.size} available codes`);
     
@@ -108,22 +153,32 @@ export async function POST(request: NextRequest) {
         redeemedAt: new Date(),
       });
       
-      // Create redemption record
+      // Update attendee record to mark as redeemed (CRITICAL: prevents double redemption)
+      transaction.update(doc(db, 'attendees', attendeeDoc.id), {
+        hasRedeemedCode: true,
+        redeemedCodeId: codeDoc.id,
+        redeemedAt: new Date(),
+      });
+      
+      // Create redemption record (must use transaction.set inside transaction)
+      const redemptionRef = doc(collection(db, 'redemptions'));
       const redemptionData = {
+        projectId: projectId,
         attendeeName: validatedData.name.trim(),
-        email: validatedData.email.toLowerCase().trim(),
+        attendeeEmail: validatedData.email.toLowerCase().trim(),
         attendeeId: attendeeDoc.id,
         codeId: codeDoc.id,
-        code: codeData.code,
+        codeValue: codeData.code,
         codeUrl: codeData.cursorUrl,
-        timestamp: new Date(),
+        redeemedAt: new Date(),
+        timestamp: new Date(), // Keep for backward compatibility
         ipAddress: request.headers.get('x-forwarded-for') || 
                    request.headers.get('x-real-ip') || 
                    'unknown',
         userAgent: request.headers.get('user-agent') || 'unknown',
       };
       
-      const redemptionRef = await addDoc(collection(db, 'redemptions'), redemptionData);
+      transaction.set(redemptionRef, redemptionData);
       
       return {
         code: codeData.code,

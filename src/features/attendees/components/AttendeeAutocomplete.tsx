@@ -19,6 +19,7 @@ interface AttendeeAutocompleteProps {
   error?: string;
   disabled?: boolean;
   placeholder?: string;
+  projectId?: string;
 }
 
 export function AttendeeAutocomplete({
@@ -28,13 +29,14 @@ export function AttendeeAutocomplete({
   error,
   disabled = false,
   placeholder = "Start typing attendee name...",
+  projectId,
 }: AttendeeAutocompleteProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
 
-  const { getNameSuggestions, findAttendeeByName, isLoading } = useAttendees();
+  const { getNameSuggestions, findAttendeeByName, isLoading } = useAttendees(projectId);
   const suggestions = getNameSuggestions(value);
 
   // Handle input changes

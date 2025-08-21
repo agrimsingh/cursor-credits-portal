@@ -19,7 +19,11 @@ import type { AttendeeValidationResponse } from '../model';
 
 type ValidationStep = 'name' | 'email' | 'ready';
 
-export function RedemptionForm() {
+interface RedemptionFormProps {
+  projectId?: string; // Optional for backward compatibility
+}
+
+export function RedemptionForm({ projectId }: RedemptionFormProps = {}) {
   const [currentStep, setCurrentStep] = useState<ValidationStep>('name');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -68,7 +72,8 @@ export function RedemptionForm() {
         body: JSON.stringify({
           step: 'name',
           name: name.trim(),
-          eventId: 'sample-event-1', // Hardcoded for MVP
+          projectId: projectId,
+          eventId: projectId ? undefined : 'sample-event-1', // Legacy fallback
         }),
       });
 
@@ -117,7 +122,8 @@ export function RedemptionForm() {
           step: 'email',
           name: name.trim(),
           email: email.toLowerCase().trim(),
-          eventId: 'sample-event-1', // Hardcoded for MVP
+          projectId: projectId,
+          eventId: projectId ? undefined : 'sample-event-1', // Legacy fallback
         }),
       });
 
@@ -154,7 +160,8 @@ export function RedemptionForm() {
         body: JSON.stringify({
           name: name.trim(),
           email: email.toLowerCase().trim(),
-          eventId: 'sample-event-1', // Hardcoded for MVP
+          projectId: projectId,
+          eventId: projectId ? undefined : 'sample-event-1', // Legacy fallback
         }),
       });
 
@@ -206,6 +213,7 @@ export function RedemptionForm() {
               onAttendeeSelect={handleAttendeeSelect}
               error={currentStep === 'name' ? error : undefined}
               disabled={currentStep !== 'name' || isLoading}
+              projectId={projectId}
             />
             
             {currentStep === 'name' && (

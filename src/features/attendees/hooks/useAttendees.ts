@@ -14,19 +14,20 @@ export interface AttendeeForSuggestion {
   hasRedeemed: boolean;
 }
 
-export function useAttendees() {
+export function useAttendees(projectId?: string) {
   const [attendees, setAttendees] = useState<AttendeeForSuggestion[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchAttendees();
-  }, []);
+  }, [projectId]);
 
   const fetchAttendees = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/admin/attendees');
+      const url = projectId ? `/api/attendees?projectId=${projectId}` : '/api/attendees';
+      const response = await fetch(url);
       
       if (!response.ok) {
         throw new Error('Failed to fetch attendees');

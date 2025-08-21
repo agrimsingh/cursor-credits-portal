@@ -63,10 +63,13 @@ Focus: Event organizer tools
 - [x] Session storage for admin access (client-side)
 - [x] Admin navigation layout
 
-### P2.2 - Event Management
-- [ ] Create/edit event functionality
-- [x] CSV upload for codes (drag-n-drop)
-- [x] CSV upload for attendee lists
+### P2.2 - Project/Event Management (PRIORITY UPDATED)
+- [ ] Project selection screen on admin login (create new / open existing)
+- [ ] Project creation with name, description, date
+- [ ] Project switching and management interface
+- [ ] Project-scoped data isolation (codes, attendees, redemptions)
+- [x] CSV upload for codes (drag-n-drop) - needs project scoping
+- [x] CSV upload for attendee lists - needs project scoping
 - [x] Data validation and error reporting
 
 ### P2.3 - Real-time Dashboard
@@ -76,19 +79,20 @@ Focus: Event organizer tools
 - [x] Export redemption logs
 
 ### P2.4 - Code Pool Management
-- [x] View all codes (used/unused)
-- [ ] Carry forward unused codes
-- [x] Bulk operations UI
+- [x] View all codes (used/unused) - needs project scoping
+- [ ] Carry forward unused codes between projects
+- [x] Bulk operations UI - needs project scoping
+- [ ] Project data cleanup/deletion functionality
 
 ================================================================================
 
 ## Phase 3: Multi-Event Support (Week 5) 🎯
 Focus: Scale to multiple events
 
-### P3.1 - Event Routing
-- [ ] Dynamic routes per event
+### P3.1 - Event Routing (MOVED TO PHASE 2)
+- [ ] Dynamic routes per project/event → MOVED TO P2.2
 - [ ] Event-specific branding/config
-- [ ] Event switching for admins
+- [ ] Event switching for admins → MOVED TO P2.2
 
 ### P3.2 - Advanced Features
 - [ ] QR code generation for events
@@ -170,18 +174,23 @@ Ongoing tasks throughout development:
 
 ## Progress Tracking
 Last Updated: August 21, 2025
-Current Phase: Phase 2 Admin Dashboard (Nearly Complete) → Phase 3 Multi-Event
-Blockers: None
+Current Phase: Phase 2 Admin Dashboard → Project-Based Architecture Implementation
+Blockers: Need to implement project selection before continuing with existing admin features
 
 Notes:
 - Phase 1 MVP: ✅ COMPLETED (core redemption flow working)
-- Phase 2 Admin Dashboard: 🚧 85% COMPLETE (major functionality working)
+- Phase 2 Admin Dashboard: 🚧 75% COMPLETE (major functionality working)
 - CSV upload/download working for both codes and attendees
 - Real-time dashboard with live stats and filtering
 - **Auth Simplification Decision**: Removed complex Firebase Auth for Phase 2
   - Attendees already "auth" via name selection + email verification
   - Admin access simplified to environment password for faster iteration
   - Complex auth/roles deferred to Phase 4 (multi-tenant needs)
+- **NEW: Project-Based Architecture Decision**: 
+  - Admin sees project selection screen on login (create new / open existing)
+  - All data (codes, attendees, redemptions) scoped to specific projects
+  - Natural data isolation solves cleanup and multi-hackathon organization
+  - Moves multi-event support from Phase 3 to Phase 2 priority
 - Firebase deployment ready (admin dashboard functional)
 
 ## Recent Accomplishments (Phase 2)
@@ -195,3 +204,23 @@ Notes:
 - Resolved CSV upload import errors (parseCsvFromString → parseCodesCSV/parseAttendeesCSV)
 - Fixed codes fetch API with proper null safety and collection initialization
 - Improved error handling and debugging across admin routes
+
+## Next Steps (Project-Based Architecture)
+1. **Immediate Priority**: Project selection screen on admin login
+   - Create/Open existing project interface
+   - Project creation form (name, description, date)
+   - Project management (edit, delete, archive)
+
+2. **Data Migration**: Update all existing functionality to be project-scoped
+   - Add projectId to all Firestore collections (codes, attendees, redemptions)
+   - Update all API endpoints to filter by projectId
+   - Update admin dashboard to show project-specific data
+
+3. **User Experience**: Update redemption flow
+   - Project selection or slug-based routing for attendees
+   - Update hardcoded 'sample-event-1' eventId throughout codebase
+
+4. **Natural Benefits**: This architecture provides
+   - Built-in data cleanup (delete entire projects)
+   - Clear organization for different hackathons
+   - Scalable foundation for Phase 3+ features

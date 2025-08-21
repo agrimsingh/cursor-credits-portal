@@ -1,18 +1,31 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 
 /**
- * API route for fetching all codes with their redemption status
+ * API route for fetching all codes with their redemption status for a specific project
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    // Fetch codes and redemptions in parallel
-    // Handle case where collections don't exist yet (they'll return empty snapshots)
+    const { searchParams } = new URL(request.url);
+    const projectId = searchParams.get('projectId');
+
+    if (!projectId) {
+      return NextResponse.json(
+        { error: 'Project ID is required' },
+        { status: 400 }
+      );
+    }
+
+    console.log(`[Codes API] Fetching codes for projectId: ${projectId}`);
+
+    // Fetch codes and redemptions for the specific project in parallel
     const [codesSnapshot, redemptionsSnapshot] = await Promise.all([
-      getDocs(collection(db, 'codes')),
-      getDocs(collection(db, 'redemptions'))
+      getDocs(query(collection(db, 'codes'), where('projectId', '==', projectId))),
+      getDocs(query(collection(db, 'redemptions'), where('projectId', '==', projectId)))
     ]);
+
+    console.log(`[Codes API] Found ${codesSnapshot.size} codes, ${redemptionsSnapshot.size} redemptions`);
 
     // Create a map of redeemed codes for quick lookup
     const redemptionMap = new Map();
@@ -21,8 +34,8 @@ export async function GET() {
       if (data.codeUrl) {
         redemptionMap.set(data.codeUrl, {
           redeemedBy: data.attendeeName,
-          redeemedAt: data.timestamp?.toDate?.()?.toISOString() || data.timestamp,
-          email: data.email
+          redeemedAt: data.redeemedAt?.toDate?.()?.toISOString() || data.timestamp?.toDate?.()?.toISOString() || data.timestamp,
+          email: data.attendeeEmail || data.email
         });
       }
     });
@@ -31,11 +44,13 @@ export async function GET() {
     const codes = codesSnapshot.docs
       .map(doc => {
         const data = doc.data();
-        const redemption = redemptionMap.get(data.url);
+        // Handle both url and cursorUrl field names for backward compatibility
+        const codeUrl = data.url || data.cursorUrl || '';
+        const redemption = redemptionMap.get(codeUrl);
         
         return {
           id: doc.id,
-          url: data.url || '', // Ensure url is never undefined
+          url: codeUrl,
           isUsed: !!redemption,
           redeemedBy: redemption?.redeemedBy,
           redeemedAt: redemption?.redeemedAt,

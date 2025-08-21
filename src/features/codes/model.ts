@@ -13,7 +13,7 @@ export const CodeSchema = z.object({
   id: z.string().min(1, 'Code ID is required'),
   code: z.string().min(1, 'Code value is required'),
   isRedeemed: z.boolean().default(false),
-  eventId: z.string().min(1, 'Event ID is required'),
+  projectId: z.string().min(1, 'Project ID is required'),
   createdAt: z.date(),
   redeemedAt: z.date().optional(),
   redeemedBy: z.string().optional(), // Attendee document ID
@@ -52,7 +52,7 @@ export type RedeemCode = z.infer<typeof RedeemCodeSchema>;
  */
 export const BulkCodeImportSchema = z.object({
   codes: z.array(z.string().min(1, 'Code cannot be empty')),
-  eventId: z.string().min(1, 'Event ID is required'),
+  projectId: z.string().min(1, 'Project ID is required'),
 });
 
 export type BulkCodeImport = z.infer<typeof BulkCodeImportSchema>;

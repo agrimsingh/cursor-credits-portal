@@ -54,7 +54,16 @@ export default function AdminCodes() {
 
   const fetchCodes = async () => {
     try {
-      const response = await fetch('/api/admin/codes');
+      // Get selected project from localStorage
+      const selectedProjectData = localStorage.getItem('admin_selected_project');
+      if (!selectedProjectData) {
+        setError('No project selected');
+        setIsLoading(false);
+        return;
+      }
+
+      const selectedProject = JSON.parse(selectedProjectData);
+      const response = await fetch(`/api/admin/codes?projectId=${selectedProject.id}`);
       if (!response.ok) throw new Error('Failed to fetch codes');
       
       const data = await response.json();

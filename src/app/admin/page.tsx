@@ -21,7 +21,13 @@ export default function AdminPage() {
   useEffect(() => {
     const isAuthenticated = localStorage.getItem('admin_authenticated') === 'true';
     if (isAuthenticated) {
-      router.push('/admin/dashboard');
+      // Check if user has selected a project
+      const selectedProject = localStorage.getItem('admin_selected_project');
+      if (selectedProject) {
+        router.push('/admin/dashboard');
+      } else {
+        router.push('/admin/projects');
+      }
     }
   }, [router]);
 
@@ -42,7 +48,7 @@ export default function AdminPage() {
 
       if (result.success) {
         localStorage.setItem('admin_authenticated', 'true');
-        router.push('/admin/dashboard');
+        router.push('/admin/projects');
       } else {
         setError('Invalid password');
       }

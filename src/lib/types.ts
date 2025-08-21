@@ -44,7 +44,7 @@ export type CreateEvent = z.infer<typeof CreateEventSchema>;
  */
 export const RedemptionSchema = z.object({
   id: z.string().min(1, 'Redemption ID is required'),
-  eventId: z.string().min(1, 'Event ID is required'),
+  projectId: z.string().min(1, 'Project ID is required'),
   attendeeId: z.string().min(1, 'Attendee ID is required'),
   codeId: z.string().min(1, 'Code ID is required'),
   attendeeName: z.string().min(1, 'Attendee name is required'),

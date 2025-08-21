@@ -38,7 +38,16 @@ export default function AdminDashboard() {
 
   const fetchDashboardData = async () => {
     try {
-      const response = await fetch('/api/admin/dashboard');
+      // Get selected project from localStorage
+      const selectedProjectData = localStorage.getItem('admin_selected_project');
+      if (!selectedProjectData) {
+        setError('No project selected');
+        setIsLoading(false);
+        return;
+      }
+
+      const selectedProject = JSON.parse(selectedProjectData);
+      const response = await fetch(`/api/admin/dashboard?projectId=${selectedProject.id}`);
       if (!response.ok) throw new Error('Failed to fetch data');
       
       const data = await response.json();
@@ -108,17 +117,11 @@ export default function AdminDashboard() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatsCard
           title="Total Codes"
           value={stats?.totalCodes || 0}
           description="Available for redemption"
-        />
-        <StatsCard
-          title="Codes Used"
-          value={stats?.usedCodes || 0}
-          description={`${stats?.usedCodes || 0} of ${stats?.totalCodes || 0} redeemed`}
-          progress={stats?.totalCodes ? (stats.usedCodes / stats.totalCodes) * 100 : 0}
         />
         <StatsCard
           title="Total Attendees"
@@ -128,7 +131,8 @@ export default function AdminDashboard() {
         <StatsCard
           title="Redemptions"
           value={stats?.totalRedemptions || 0}
-          description="Successful claims"
+          description={`${stats?.totalRedemptions || 0} of ${stats?.totalCodes || 0} codes redeemed`}
+          progress={stats?.totalCodes ? ((stats.totalRedemptions || 0) / stats.totalCodes) * 100 : 0}
         />
       </div>
 

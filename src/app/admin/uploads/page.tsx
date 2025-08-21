@@ -21,9 +21,24 @@ export default function AdminUploads() {
     setUploadResults(null);
 
     try {
+      // Get selected project from localStorage
+      const selectedProjectData = localStorage.getItem('admin_selected_project');
+      if (!selectedProjectData) {
+        setUploadResults({
+          type,
+          success: false,
+          message: 'No project selected. Please select a project first.'
+        });
+        setIsUploading(false);
+        return;
+      }
+
+      const selectedProject = JSON.parse(selectedProjectData);
+
       const formData = new FormData();
       formData.append('file', file);
       formData.append('type', type);
+      formData.append('projectId', selectedProject.id);
 
       const response = await fetch('/api/admin/upload', {
         method: 'POST',

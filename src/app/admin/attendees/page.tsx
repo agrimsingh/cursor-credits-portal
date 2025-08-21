@@ -54,7 +54,16 @@ export default function AdminAttendees() {
 
   const fetchAttendees = async () => {
     try {
-      const response = await fetch('/api/admin/attendees');
+      // Get selected project from localStorage
+      const selectedProjectData = localStorage.getItem('admin_selected_project');
+      if (!selectedProjectData) {
+        setError('No project selected');
+        setIsLoading(false);
+        return;
+      }
+
+      const selectedProject = JSON.parse(selectedProjectData);
+      const response = await fetch(`/api/admin/attendees?projectId=${selectedProject.id}`);
       if (!response.ok) throw new Error('Failed to fetch attendees');
       
       const data = await response.json();

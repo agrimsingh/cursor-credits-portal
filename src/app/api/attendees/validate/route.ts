@@ -1,25 +1,11 @@
-/**
- * API route for step-by-step attendee validation
- * 
- * Validates attendee name and email in steps to provide better UX
- * for the redemption flow.
- */
-
 import { NextRequest, NextResponse } from 'next/server';
-import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { 
-  AttendeeValidationStepSchema, 
-  type AttendeeValidationResponse 
-} from '@/features/attendees/model';
-import type { ApiResponse } from '@/lib/types';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { AttendeeValidationStepSchema } from '@/features/attendees/model';
+import type { AttendeeValidationResponse } from '@/features/attendees/model';
 
 /**
- * POST /api/attendees/validate
- * 
- * Validates attendee information step by step:
- * - Step 1: Check if name exists in attendee list
- * - Step 2: Check if email matches the attendee name
+ * API route for validating attendee information during redemption
  */
 export async function POST(request: NextRequest) {
   try {
@@ -27,145 +13,167 @@ export async function POST(request: NextRequest) {
     
     // Validate input data
     const validatedData = AttendeeValidationStepSchema.parse(body);
-    const { step, name, email, eventId } = validatedData;
     
-    // Query attendees collection
-    const attendeesRef = collection(db, 'attendees');
-    let attendeeQuery;
+    // Handle backward compatibility: use eventId if projectId not provided
+    const projectId = validatedData.projectId || validatedData.eventId || 'sample-event-1';
     
-    if (step === 'name') {
-      // Step 1: Validate name exists
-      attendeeQuery = query(
-        attendeesRef,
-        where('name', '==', name.trim())
-      );
+    if (validatedData.step === 'name') {
+      return await validateNameStep(validatedData.name, projectId, validatedData);
+    } else if (validatedData.step === 'email') {
+      return await validateEmailStep(validatedData.name, validatedData.email!, projectId, validatedData);
     } else {
-      // Step 2: Validate name and email combination
-      attendeeQuery = query(
-        attendeesRef,
-        where('name', '==', name.trim()),
-        where('email', '==', email?.toLowerCase().trim())
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Invalid validation step' 
+        },
+        { status: 400 }
       );
     }
-    
-    const snapshot = await getDocs(attendeeQuery);
-    
-    if (step === 'name') {
-      // Name validation step
-      if (snapshot.empty) {
-        const validationResponse: AttendeeValidationResponse = {
-          isValid: false,
-          error: 'Attendee not found. Please check the name and try again.',
-        };
-        
-        const response: ApiResponse = {
-          success: false,
-          data: validationResponse,
-          timestamp: new Date(),
-        };
-        
-        return NextResponse.json(response, { status: 404 });
-      }
-      
-      // Name found - check if already redeemed
-      const attendeeDoc = snapshot.docs[0];
-      const attendeeData = attendeeDoc.data();
-      
-      // Check if already redeemed by looking for redemptions
-      const redemptionsRef = collection(db, 'redemptions');
-      const redemptionQuery = query(
-        redemptionsRef,
-        where('attendeeName', '==', name.trim()),
-        where('email', '==', attendeeData.email)
-      );
-      const redemptionSnapshot = await getDocs(redemptionQuery);
-      
-      const hasAlreadyRedeemed = !redemptionSnapshot.empty;
-      
-      const validationResponse: AttendeeValidationResponse = {
-        isValid: true,
-        attendeeId: attendeeDoc.id,
-        expectedEmail: attendeeData.email,
-        hasAlreadyRedeemed,
-      };
-      
-      const response: ApiResponse = {
-        success: true,
-        data: validationResponse,
-        timestamp: new Date(),
-      };
-      
-      return NextResponse.json(response);
-    } else {
-      // Email validation step
-      if (snapshot.empty) {
-        const validationResponse: AttendeeValidationResponse = {
-          isValid: false,
-          error: 'Email does not match the attendee record. Please check and try again.',
-        };
-        
-        const response: ApiResponse = {
-          success: false,
-          data: validationResponse,
-          timestamp: new Date(),
-        };
-        
-        return NextResponse.json(response, { status:400 });
-      }
-      
-      // Both name and email match
-      const attendeeDoc = snapshot.docs[0];
-      
-      // Check if already redeemed
-      const redemptionsRef = collection(db, 'redemptions');
-      const redemptionQuery = query(
-        redemptionsRef,
-        where('attendeeName', '==', name.trim()),
-        where('email', '==', email?.toLowerCase().trim())
-      );
-      const redemptionSnapshot = await getDocs(redemptionQuery);
-      
-      const hasAlreadyRedeemed = !redemptionSnapshot.empty;
-      
-      if (hasAlreadyRedeemed) {
-        const validationResponse: AttendeeValidationResponse = {
-          isValid: false,
-          hasAlreadyRedeemed: true,
-          error: 'You have already redeemed a code. Each attendee can only redeem one code.',
-        };
-        
-        const response: ApiResponse = {
-          success: false,
-          data: validationResponse,
-          timestamp: new Date(),
-        };
-        
-        return NextResponse.json(response, { status:400 });
-      }
-      
-      const validationResponse: AttendeeValidationResponse = {
-        isValid: true,
-        attendeeId: attendeeDoc.id,
-      };
-      
-      const response: ApiResponse = {
-        success: true,
-        data: validationResponse,
-        timestamp: new Date(),
-      };
-      
-      return NextResponse.json(response);
-    }
-    
   } catch (error) {
     console.error('Attendee validation error:', error);
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: 'Validation failed' 
+      },
+      { status: 500 }
+    );
+  }
+}
+
+async function validateNameStep(name: string, projectId: string, validatedData?: any) {
+  try {
+    // Try project-based lookup first
+    let attendeesSnapshot = await getDocs(
+      query(
+        collection(db, 'attendees'), 
+        where('projectId', '==', projectId),
+        where('name', '==', name.trim())
+      )
+    );
     
-    const response: ApiResponse = {
-      success: false,
-      error: error instanceof Error ? error.message : 'Validation failed',
-      timestamp: new Date(),
+    // Only fall back to legacy query if we're specifically dealing with legacy eventId
+    if (attendeesSnapshot.empty && 
+        projectId === 'sample-event-1' && 
+        !validatedData.projectId && 
+        validatedData.eventId === 'sample-event-1') {
+      attendeesSnapshot = await getDocs(
+        query(
+          collection(db, 'attendees'), 
+          where('name', '==', name.trim())
+        )
+      );
+    }
+
+    if (attendeesSnapshot.empty) {
+      const response: AttendeeValidationResponse = {
+        isValid: false,
+        hasAlreadyRedeemed: false,
+        error: 'Name not found in attendee list. Please check the spelling or contact an organizer.'
+      };
+      
+      return NextResponse.json({
+        success: true,
+        data: response
+      });
+    }
+
+    const attendeeDoc = attendeesSnapshot.docs[0];
+    const attendeeData = attendeeDoc.data();
+    
+    // Check if already redeemed
+    const hasAlreadyRedeemed = attendeeData.hasRedeemedCode || false;
+    
+    const response: AttendeeValidationResponse = {
+      isValid: true,
+      attendeeId: attendeeDoc.id,
+      expectedEmail: attendeeData.email,
+      hasAlreadyRedeemed,
+      error: hasAlreadyRedeemed ? 'You have already redeemed a code for this event.' : undefined
     };
+
+    return NextResponse.json({
+      success: true,
+      data: response
+    });
+  } catch (error) {
+    console.error('Name validation error:', error);
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: 'Name validation failed' 
+      },
+      { status: 500 }
+    );
+  }
+}
+
+async function validateEmailStep(name: string, email: string, projectId: string, validatedData?: any) {
+  try {
+    // Try project-based lookup first
+    let attendeesSnapshot = await getDocs(
+      query(
+        collection(db, 'attendees'), 
+        where('projectId', '==', projectId),
+        where('name', '==', name.trim()),
+        where('email', '==', email.toLowerCase().trim())
+      )
+    );
     
-    return NextResponse.json(response, { status: 400 });
+    // Only fall back to legacy query if we're specifically dealing with legacy eventId
+    if (attendeesSnapshot.empty && 
+        projectId === 'sample-event-1' && 
+        validatedData && 
+        !validatedData.projectId && 
+        validatedData.eventId === 'sample-event-1') {
+      attendeesSnapshot = await getDocs(
+        query(
+          collection(db, 'attendees'), 
+          where('name', '==', name.trim()),
+          where('email', '==', email.toLowerCase().trim())
+        )
+      );
+    }
+
+    if (attendeesSnapshot.empty) {
+      const response: AttendeeValidationResponse = {
+        isValid: false,
+        hasAlreadyRedeemed: false,
+        error: 'Email does not match the expected address for this name.'
+      };
+      
+      return NextResponse.json({
+        success: true,
+        data: response
+      });
+    }
+
+    const attendeeDoc = attendeesSnapshot.docs[0];
+    const attendeeData = attendeeDoc.data();
+    
+    // Check if already redeemed
+    const hasAlreadyRedeemed = attendeeData.hasRedeemedCode || false;
+    
+    const response: AttendeeValidationResponse = {
+      isValid: true,
+      attendeeId: attendeeDoc.id,
+      hasAlreadyRedeemed,
+      error: hasAlreadyRedeemed ? 'You have already redeemed a code for this event.' : undefined
+    };
+
+    return NextResponse.json({
+      success: true,
+      data: response
+    });
+  } catch (error) {
+    console.error('Email validation error:', error);
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: 'Email validation failed' 
+      },
+      { status: 500 }
+    );
   }
 }

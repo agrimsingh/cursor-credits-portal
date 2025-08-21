@@ -13,7 +13,7 @@ export const AttendeeSchema = z.object({
   id: z.string().min(1, 'Attendee ID is required'),
   name: z.string().min(1, 'Name is required').max(100, 'Name too long'),
   email: z.string().email('Valid email is required'),
-  eventId: z.string().min(1, 'Event ID is required'),
+  projectId: z.string().min(1, 'Project ID is required'),
   hasRedeemedCode: z.boolean().default(false),
   redeemedCodeId: z.string().optional(),
   createdAt: z.date(),
@@ -44,7 +44,9 @@ export type CreateAttendee = z.infer<typeof CreateAttendeeSchema>;
 export const AttendeeRedemptionSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100, 'Name too long'),
   email: z.string().email('Valid email is required'),
-  eventId: z.string().min(1, 'Event ID is required'),
+  // Make projectId optional for backward compatibility with eventId
+  projectId: z.string().optional(),
+  eventId: z.string().optional(), // Legacy field for backward compatibility
 });
 
 export type AttendeeRedemption = z.infer<typeof AttendeeRedemptionSchema>;
@@ -56,7 +58,9 @@ export const AttendeeValidationStepSchema = z.object({
   step: z.enum(['name', 'email']),
   name: z.string().min(1, 'Name is required').max(100, 'Name too long'),
   email: z.string().email('Valid email is required').optional(),
-  eventId: z.string().min(1, 'Event ID is required'),
+  // Make projectId optional for backward compatibility with eventId
+  projectId: z.string().optional(),
+  eventId: z.string().optional(), // Legacy field for backward compatibility
 });
 
 export type AttendeeValidationStep = z.infer<typeof AttendeeValidationStepSchema>;
@@ -78,8 +82,8 @@ export type AttendeeValidationResponse = z.infer<typeof AttendeeValidationRespon
  * Schema for bulk attendee import from CSV
  */
 export const BulkAttendeeImportSchema = z.object({
-  attendees: z.array(CreateAttendeeSchema.omit({ eventId: true })),
-  eventId: z.string().min(1, 'Event ID is required'),
+  attendees: z.array(CreateAttendeeSchema.omit({ projectId: true })),
+  projectId: z.string().min(1, 'Project ID is required'),
 });
 
 export type BulkAttendeeImport = z.infer<typeof BulkAttendeeImportSchema>;

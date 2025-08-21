@@ -1,26 +1,38 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, limit, where } from 'firebase/firestore';
 
 /**
- * API route that provides dashboard statistics and recent activity
+ * API route that provides dashboard statistics and recent activity for a specific project
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const projectId = searchParams.get('projectId');
+
+    if (!projectId) {
+      return NextResponse.json(
+        { error: 'Project ID is required' },
+        { status: 400 }
+      );
+    }
+
     // Check if Firebase is properly initialized
     if (!db) {
       throw new Error('Firebase not initialized');
     }
 
-    // Fetch all collections with error handling for missing collections
+    // Fetch all collections for the specific project with error handling
     let codesSnapshot, attendeesSnapshot, redemptionsSnapshot;
     
     try {
       [codesSnapshot, attendeesSnapshot, redemptionsSnapshot] = await Promise.all([
-        getDocs(collection(db, 'codes')).catch(() => ({ docs: [], size: 0 })),
-        getDocs(collection(db, 'attendees')).catch(() => ({ docs: [], size: 0 })),
-        getDocs(query(collection(db, 'redemptions'), orderBy('timestamp', 'desc'), limit(10)))
-          .catch(() => ({ docs: [], size: 0 }))
+        getDocs(query(collection(db, 'codes'), where('projectId', '==', projectId))).catch(() => ({ docs: [], size: 0 })),
+        getDocs(query(collection(db, 'attendees'), where('projectId', '==', projectId))).catch(() => ({ docs: [], size: 0 })),
+        getDocs(query(
+          collection(db, 'redemptions'), 
+          where('projectId', '==', projectId)
+        )).catch(() => ({ docs: [], size: 0 }))
       ]);
     } catch (firestoreError) {
       console.error('Firestore access error:', firestoreError);
@@ -48,8 +60,8 @@ export async function GET() {
       return {
         id: doc.id,
         attendeeName: data.attendeeName || 'Unknown',
-        email: data.email || 'Unknown',
-        timestamp: data.timestamp?.toDate?.()?.toISOString() || data.timestamp || new Date().toISOString(),
+        email: data.attendeeEmail || data.email || 'Unknown', // Try both field names
+        timestamp: data.redeemedAt?.toDate?.()?.toISOString() || data.timestamp?.toDate?.()?.toISOString() || data.timestamp || new Date().toISOString(),
         codeUrl: data.codeUrl || 'N/A'
       };
     });
