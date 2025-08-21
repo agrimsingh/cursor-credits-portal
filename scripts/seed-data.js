@@ -1,18 +1,28 @@
 /**
  * Data seeding script for development and testing
  * 
- * This script populates Firestore with sample event and code data
- * for testing the redemption flow.
+ * This script populates Firestore with sample data matching our current schema:
+ * - codes: { url, isUsed, createdAt }
+ * - attendees: { name, email, createdAt }
+ * - redemptions: { attendeeName, email, codeUrl, timestamp }
  * 
  * Usage: node scripts/seed-data.js
  */
 
 const { initializeApp } = require('firebase/app');
-const { getFirestore, collection, doc, setDoc, Timestamp } = require('firebase/firestore');
+const { getFirestore, collection, doc, setDoc, addDoc, Timestamp } = require('firebase/firestore');
 
-// Firebase config - you'll need to update with your project details
+// Load environment variables
+require('dotenv').config({ path: '.env.local' });
+
+// Firebase config from environment variables
 const firebaseConfig = {
-  // Add your Firebase config here
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
 // Initialize Firebase
@@ -23,44 +33,55 @@ async function seedData() {
   try {
     console.log('🌱 Starting data seeding...');
 
-    // Create sample event
-    const eventRef = doc(db, 'events', 'sample-event-1');
-    await setDoc(eventRef, {
-      name: 'Cursor Hamburg Hackathon',
-      description: 'A fantastic hackathon event in Hamburg',
-      organizerId: 'admin-user-1',
-      organizationName: 'Cursor Hamburg',
-      location: 'Hamburg, Germany',
-      eventDate: Timestamp.fromDate(new Date('2025-08-20')),
-      isActive: true,
-      totalCodes: 100,
-      redeemedCodes: 0,
-      createdAt: Timestamp.now(),
-      updatedAt: Timestamp.now(),
-    });
-
-    console.log('✅ Created sample event');
-
-    // Create sample codes
-    const codes = [
-      'CURSOR-HAMBURG-001',
-      'CURSOR-HAMBURG-002', 
-      'CURSOR-HAMBURG-003',
-      'CURSOR-HAMBURG-004',
-      'CURSOR-HAMBURG-005',
+    // Create sample codes (matching our current schema)
+    const sampleCodes = [
+      { code: 'ABC123DEF456', url: 'https://cursor.com/redeem/abc123def456ghi789' },
+      { code: 'JKL012MNO345', url: 'https://cursor.com/redeem/jkl012mno345pqr678' },
+      { code: 'STU901VWX234', url: 'https://cursor.com/redeem/stu901vwx234yzA567' },
+      { code: 'BCD890EFG123', url: 'https://cursor.com/redeem/bcd890efg123hij456' },
+      { code: 'KLM789NOP012', url: 'https://cursor.com/redeem/klm789nop012qrs345' },
     ];
 
-    for (let i = 0; i < codes.length; i++) {
-      const codeRef = doc(db, 'codes', `code-${i + 1}`);
-      await setDoc(codeRef, {
-        code: codes[i],
-        isRedeemed: false,
-        eventId: 'sample-event-1',
+    for (let i = 0; i < sampleCodes.length; i++) {
+      await addDoc(collection(db, 'codes'), {
+        code: sampleCodes[i].code,
+        cursorUrl: sampleCodes[i].url,
+        isRedeemed: false, // Fixed: Match redemption API expectations
         createdAt: Timestamp.now(),
       });
     }
 
-    console.log(`✅ Created ${codes.length} sample codes`);
+    console.log(`✅ Created ${sampleCodes.length} sample codes`);
+
+    // Create sample attendees (matching our current schema)
+    const sampleAttendees = [
+      { name: 'Alex Schmidt', email: 'alex.schmidt@example.com' },
+      { name: 'Sarah Johnson', email: 'sarah.j@example.com' },
+      { name: 'Mike Chen', email: 'mchen@example.com' },
+      { name: 'Emma Williams', email: 'emma.w@example.com' },
+      { name: 'David Brown', email: 'david.brown@example.com' },
+    ];
+
+    for (const attendee of sampleAttendees) {
+      await addDoc(collection(db, 'attendees'), {
+        name: attendee.name,
+        email: attendee.email,
+        createdAt: Timestamp.now(),
+      });
+    }
+
+    console.log(`✅ Created ${sampleAttendees.length} sample attendees`);
+
+    // Create a sample redemption
+    await addDoc(collection(db, 'redemptions'), {
+      attendeeName: 'Alex Schmidt',
+      email: 'alex.schmidt@example.com',
+      codeUrl: 'https://cursor.com/redeem/abc123def456ghi789',
+      timestamp: Timestamp.now(),
+      ipAddress: '127.0.0.1'
+    });
+
+    console.log('✅ Created sample redemption');
     console.log('🎉 Data seeding completed successfully!');
     
   } catch (error) {

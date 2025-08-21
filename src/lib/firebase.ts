@@ -44,8 +44,20 @@ function validateFirebaseConfig() {
   }
 }
 
-// Validate config on module load
-validateFirebaseConfig();
+// Validate config on module load (only in browser/server environment)
+if (typeof window !== 'undefined' || typeof process !== 'undefined') {
+  try {
+    validateFirebaseConfig();
+  } catch (error) {
+    console.error('Firebase configuration error:', error);
+    // In development, we'll proceed with a warning instead of throwing
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('Proceeding with incomplete Firebase config in development mode');
+    } else {
+      throw error;
+    }
+  }
+}
 
 /**
  * Initialize Firebase app (singleton pattern)

@@ -50,6 +50,31 @@ export const AttendeeRedemptionSchema = z.object({
 export type AttendeeRedemption = z.infer<typeof AttendeeRedemptionSchema>;
 
 /**
+ * Schema for step-by-step validation during redemption
+ */
+export const AttendeeValidationStepSchema = z.object({
+  step: z.enum(['name', 'email']),
+  name: z.string().min(1, 'Name is required').max(100, 'Name too long'),
+  email: z.string().email('Valid email is required').optional(),
+  eventId: z.string().min(1, 'Event ID is required'),
+});
+
+export type AttendeeValidationStep = z.infer<typeof AttendeeValidationStepSchema>;
+
+/**
+ * Response schema for attendee validation
+ */
+export const AttendeeValidationResponseSchema = z.object({
+  isValid: z.boolean(),
+  attendeeId: z.string().optional(),
+  expectedEmail: z.string().optional(),
+  hasAlreadyRedeemed: z.boolean().default(false),
+  error: z.string().optional(),
+});
+
+export type AttendeeValidationResponse = z.infer<typeof AttendeeValidationResponseSchema>;
+
+/**
  * Schema for bulk attendee import from CSV
  */
 export const BulkAttendeeImportSchema = z.object({

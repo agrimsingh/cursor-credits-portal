@@ -1,0 +1,193 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { db } from '@/lib/firebase';
+import { collection, addDoc, getDocs } from 'firebase/firestore';
+import { parseCodesCSV, parseAttendeesCSV } from '@/lib/csv-parser';
+
+/**
+ * API route for uploading CSV files (codes and attendees)
+ */
+export async function POST(request: NextRequest) {
+  try {
+    const formData = await request.formData();
+    const file = formData.get('file') as File;
+    const type = formData.get('type') as 'codes' | 'attendees';
+
+    if (!file) {
+      return NextResponse.json(
+        { success: false, message: 'No file provided' },
+        { status: 400 }
+      );
+    }
+
+    if (!type || !['codes', 'attendees'].includes(type)) {
+      return NextResponse.json(
+        { success: false, message: 'Invalid upload type' },
+        { status: 400 }
+      );
+    }
+
+    // Read and parse CSV file
+    const fileContent = await file.text();
+    
+    if (type === 'codes') {
+      const parsedCodes = parseCodesCSV(fileContent);
+      if (parsedCodes.length === 0) {
+        return NextResponse.json(
+          { success: false, message: 'CSV file is empty or contains no valid codes' },
+          { status: 400 }
+        );
+      }
+      return await handleCodesUpload(parsedCodes);
+    } else {
+      const parsedAttendees = parseAttendeesCSV(fileContent);
+      if (parsedAttendees.length === 0) {
+        return NextResponse.json(
+          { success: false, message: 'CSV file is empty or contains no valid attendees' },
+          { status: 400 }
+        );
+      }
+      return await handleAttendeesUpload(parsedAttendees);
+    }
+  } catch (error) {
+    console.error('Upload API error:', error);
+    return NextResponse.json(
+      { success: false, message: 'Upload processing failed' },
+      { status: 500 }
+    );
+  }
+}
+
+async function handleCodesUpload(data: Array<{
+  code: string;
+  cursorUrl: string;
+  creator?: string;
+  date?: string;
+}>) {
+  try {
+    if (data.length === 0) {
+      return NextResponse.json(
+        { success: false, message: 'No valid codes found in CSV' },
+        { status: 400 }
+      );
+    }
+
+    // Check for existing codes to avoid duplicates
+    const existingCodesSnapshot = await getDocs(collection(db, 'codes'));
+    const existingCodes = new Set(
+      existingCodesSnapshot.docs.map(doc => doc.data().code)
+    );
+
+    // Filter out duplicates
+    const newCodes = data.filter(codeData => !existingCodes.has(codeData.code));
+
+    if (newCodes.length === 0) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          message: 'All codes already exist in the database',
+          details: { totalProcessed: data.length, duplicates: data.length }
+        },
+        { status: 400 }
+      );
+    }
+
+    // Add new codes to Firestore
+    const promises = newCodes.map(codeData => 
+      addDoc(collection(db, 'codes'), {
+        code: codeData.code,
+        cursorUrl: codeData.cursorUrl,
+        creator: codeData.creator,
+        date: codeData.date,
+        isRedeemed: false, // Fixed: Use consistent field name
+        createdAt: new Date()
+      })
+    );
+
+    await Promise.all(promises);
+
+    return NextResponse.json({
+      success: true,
+      message: `Successfully uploaded ${newCodes.length} codes`,
+      details: {
+        totalProcessed: data.length,
+        newCodes: newCodes.length,
+        duplicatesSkipped: data.length - newCodes.length
+      }
+    });
+  } catch (error) {
+    console.error('Codes upload error:', error);
+    return NextResponse.json(
+      { success: false, message: 'Failed to process codes upload' },
+      { status: 500 }
+    );
+  }
+}
+
+async function handleAttendeesUpload(data: Array<{
+  name: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  checkedInAt?: string;
+  approvalStatus?: string;
+}>) {
+  try {
+    if (data.length === 0) {
+      return NextResponse.json(
+        { success: false, message: 'No valid attendee data found' },
+        { status: 400 }
+      );
+    }
+
+    // Check for existing attendees to avoid duplicates
+    const existingAttendeesSnapshot = await getDocs(collection(db, 'attendees'));
+    const existingEmails = new Set(
+      existingAttendeesSnapshot.docs.map(doc => doc.data().email)
+    );
+
+    // Filter out duplicates
+    const newAttendees = data.filter(attendee => !existingEmails.has(attendee.email));
+
+    if (newAttendees.length === 0) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          message: 'All attendees already exist in the database',
+          details: { totalProcessed: data.length, duplicates: data.length }
+        },
+        { status: 400 }
+      );
+    }
+
+    // Add new attendees to Firestore
+    const promises = newAttendees.map(attendee => 
+      addDoc(collection(db, 'attendees'), {
+        name: attendee.name,
+        email: attendee.email,
+        firstName: attendee.firstName,
+        lastName: attendee.lastName,
+        checkedInAt: attendee.checkedInAt,
+        approvalStatus: attendee.approvalStatus,
+        createdAt: new Date()
+      })
+    );
+
+    await Promise.all(promises);
+
+    return NextResponse.json({
+      success: true,
+      message: `Successfully uploaded ${newAttendees.length} attendees`,
+      details: {
+        totalProcessed: data.length,
+        newAttendees: newAttendees.length,
+        duplicatesSkipped: data.length - newAttendees.length
+      }
+    });
+  } catch (error) {
+    console.error('Attendees upload error:', error);
+    return NextResponse.json(
+      { success: false, message: 'Failed to process attendees upload' },
+      { status: 500 }
+    );
+  }
+}
