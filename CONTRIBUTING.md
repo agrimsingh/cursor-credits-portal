@@ -58,9 +58,9 @@ When contributing:
 
 ## 📞 Getting Help
 
-- Check existing [Issues](../../issues) for known problems
-- Create a new issue for bugs or feature requests
-- Join discussions in the [Discussions](../../discussions) section
+- Check existing Issues for known problems
+- Create a new issue for bugs or feature requests  
+- Join discussions in the project repository
 
 ## 🙏 Recognition
 

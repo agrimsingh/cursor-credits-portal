@@ -156,4 +156,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-Built with ❤️ for the Cursor community by [@cursorcommunityled](https://github.com/cursorcommunityled)
+Built with ❤️ for the Cursor community

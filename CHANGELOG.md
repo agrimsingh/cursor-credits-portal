@@ -60,4 +60,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-For more details about changes, see the [commit history](https://github.com/cursorcommunityled/cursor-credits-portal/commits/main).
+For more details about changes, see the commit history in the repository.
