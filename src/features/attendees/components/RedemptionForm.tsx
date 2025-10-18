@@ -194,10 +194,10 @@ export function RedemptionForm({ projectId }: RedemptionFormProps = {}) {
   };
 
   return (
-    <Card>
+    <Card className="border-border bg-card">
       <CardHeader>
-        <CardTitle>Attendee Information</CardTitle>
-        <div className="text-sm text-gray-600 dark:text-gray-400">
+        <CardTitle className="text-xl font-medium">Attendee Information</CardTitle>
+        <div className="text-sm text-muted-foreground">
           {currentStep === 'name' && 'Step 1: Enter your name'}
           {currentStep === 'email' && 'Step 2: Confirm your email'}
           {currentStep === 'ready' && 'Ready to claim your code'}
@@ -232,7 +232,7 @@ export function RedemptionForm({ projectId }: RedemptionFormProps = {}) {
             <div className="space-y-2">
               <Label htmlFor="email">Email Address</Label>
               {expectedEmail && (
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-muted-foreground">
                   Please enter the email that matches: <span className="font-mono font-medium">{maskEmail(expectedEmail)}</span>
                 </p>
               )}
@@ -275,8 +275,8 @@ export function RedemptionForm({ projectId }: RedemptionFormProps = {}) {
           {/* Step 3: Final Redemption */}
           {currentStep === 'ready' && (
             <div className="space-y-4">
-              <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md">
-                <p className="text-sm text-green-800 dark:text-green-200">
+              <div className="p-4 bg-secondary border border-border rounded-lg">
+                <p className="text-sm text-foreground">
                   ✓ Name and email verified. Ready to claim your Cursor code!
                 </p>
               </div>
@@ -294,8 +294,8 @@ export function RedemptionForm({ projectId }: RedemptionFormProps = {}) {
 
           {/* Error Display */}
           {error && currentStep !== 'name' && (
-            <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
-              <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+            <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+              <p className="text-sm text-destructive">{error}</p>
             </div>
           )}
         </div>

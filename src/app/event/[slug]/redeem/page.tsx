@@ -17,6 +17,7 @@ export default function ProjectRedeemPage() {
 
   useEffect(() => {
     fetchProjectBySlug();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug]);
 
   const fetchProjectBySlug = async () => {
@@ -39,12 +40,12 @@ export default function ProjectRedeemPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
-        <div className="container mx-auto px-4 py-16">
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-6 py-24">
           <div className="max-w-md mx-auto">
-            <div className="text-center mb-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
-              <p className="mt-2 text-sm text-gray-600">Loading event...</p>
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-foreground mx-auto"></div>
+              <p className="mt-4 text-sm text-muted-foreground">Loading event...</p>
             </div>
           </div>
         </div>
@@ -54,15 +55,16 @@ export default function ProjectRedeemPage() {
 
   if (error || !project) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
-        <div className="container mx-auto px-4 py-16">
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-6 py-24">
           <div className="max-w-md mx-auto">
             <div className="text-center">
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Event Not Found</h1>
-              <p className="text-gray-600 dark:text-gray-300 mb-4">
+              <h1 className="text-3xl font-semibold tracking-tight mb-3">Event Not Found</h1>
+              <p className="text-muted-foreground mb-6">
                 {error || 'The event you\'re looking for is not available for code redemption.'}
               </p>
-              <a href="/" className="text-blue-600 hover:text-blue-800 underline">
+              {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+              <a href="/" className="text-foreground hover:text-muted-foreground underline underline-offset-4">
                 Return to Home
               </a>
             </div>
@@ -73,17 +75,17 @@ export default function ProjectRedeemPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
-      <div className="container mx-auto px-4 py-16">
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-6 py-24">
         <div className="max-w-md mx-auto">
-          <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+          <div className="text-center mb-12">
+            <h1 className="text-3xl font-semibold tracking-tight mb-3">
               Claim Your Code
             </h1>
-            <p className="text-gray-600 dark:text-gray-300">
+            <p className="text-muted-foreground text-lg">
               {project.name}
             </p>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-muted-foreground mt-2">
               Enter your details to receive your Cursor credits
             </p>
           </div>

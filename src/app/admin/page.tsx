@@ -60,11 +60,11 @@ export default function AdminPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-background px-6">
+      <Card className="w-full max-w-md border-border bg-card">
         <CardHeader>
-          <CardTitle>Admin Access</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-2xl">Admin Access</CardTitle>
+          <CardDescription className="text-muted-foreground">
             Enter the admin password to access the dashboard
           </CardDescription>
         </CardHeader>
@@ -84,7 +84,7 @@ export default function AdminPage() {
             </div>
             
             {error && (
-              <div className="text-sm text-red-600 bg-red-50 p-3 rounded">
+              <div className="text-sm text-destructive bg-destructive/10 border border-destructive/20 p-3 rounded-lg">
                 {error}
               </div>
             )}

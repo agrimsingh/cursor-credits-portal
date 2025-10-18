@@ -71,10 +71,10 @@ export default function AdminLayout({
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
-          <p className="mt-2 text-sm text-gray-600">Loading...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-foreground mx-auto"></div>
+          <p className="mt-4 text-sm text-muted-foreground">Loading...</p>
         </div>
       </div>
     );
@@ -93,10 +93,10 @@ export default function AdminLayout({
   // Require project selection for other admin pages
   if (!selectedProject) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <h2 className="text-lg font-medium text-gray-900 mb-2">No Project Selected</h2>
-          <p className="text-gray-600 mb-4">Please select a project to continue.</p>
+          <h2 className="text-lg font-medium mb-2">No Project Selected</h2>
+          <p className="text-muted-foreground mb-6">Please select a project to continue.</p>
           <Button onClick={handleProjectSwitch}>
             Select Project
           </Button>
@@ -107,25 +107,25 @@ export default function AdminLayout({
 
   // Admin dashboard layout
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200">
+      <header className="border-b border-border bg-card">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
               <div>
-                <h1 className="text-xl font-semibold text-gray-900">
+                <h1 className="text-xl font-medium">
                   Cursor Credits Admin
                 </h1>
                 {selectedProject && (
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-muted-foreground">
                     {selectedProject.name}
                   </p>
                 )}
               </div>
             </div>
             
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-3">
               <Button 
                 variant="outline" 
                 onClick={handleProjectSwitch}
@@ -153,7 +153,7 @@ export default function AdminLayout({
       </header>
 
       {/* Navigation */}
-      <nav className="bg-white border-b border-gray-200">
+      <nav className="border-b border-border bg-card">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex space-x-8">
             <NavLink href="/admin/dashboard" isActive={pathname === '/admin/dashboard'}>
@@ -173,7 +173,7 @@ export default function AdminLayout({
       </nav>
 
       {/* Main content */}
-      <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+      <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         {children}
       </main>
     </div>
@@ -199,8 +199,8 @@ function NavLink({
       onClick={() => router.push(href)}
       className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
         isActive
-          ? 'border-blue-500 text-blue-600'
-          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+          ? 'border-foreground text-foreground'
+          : 'border-transparent text-muted-foreground hover:text-foreground'
       }`}
     >
       {children}

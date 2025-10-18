@@ -1,6 +1,6 @@
 /**
  * CSV parsing utilities for codes and attendees
- * 
+ *
  * Handles parsing of actual CSV formats from Cursor events:
  * - Codes: cursor.com URLs with embedded codes
  * - Attendees: Luma export format with full attendee details
@@ -12,19 +12,19 @@
  */
 export function extractCodeFromUrl(csvLine: string): string | null {
   try {
-    const parts = csvLine.split(',');
+    const parts = csvLine.split(",");
     const urlPart = parts[0];
-    
-    if (!urlPart.includes('cursor.com/referral?code=')) {
+
+    if (!urlPart.includes("cursor.com/referral?code=")) {
       return null;
     }
-    
+
     const url = new URL(urlPart);
-    const code = url.searchParams.get('code');
-    
+    const code = url.searchParams.get("code");
+
     return code || null;
   } catch (error) {
-    console.error('Error extracting code from URL:', error);
+    console.error("Error extracting code from URL:", error);
     return null;
   }
 }
@@ -38,16 +38,21 @@ export function parseCodesCSV(csvContent: string): Array<{
   creator?: string;
   date?: string;
 }> {
-  const lines = csvContent.split('\n').filter(line => line.trim());
-  const codes: Array<{ code: string; cursorUrl: string; creator?: string; date?: string }> = [];
-  
+  const lines = csvContent.split("\n").filter((line) => line.trim());
+  const codes: Array<{
+    code: string;
+    cursorUrl: string;
+    creator?: string;
+    date?: string;
+  }> = [];
+
   for (const line of lines) {
-    const parts = line.split(',');
+    const parts = line.split(",");
     const cursorUrl = parts[0]?.trim();
     const creator = parts[1]?.trim();
     const date = parts[2]?.trim();
-    
-    if (cursorUrl && cursorUrl.includes('cursor.com/referral?code=')) {
+
+    if (cursorUrl && cursorUrl.includes("cursor.com/referral?code=")) {
       const code = extractCodeFromUrl(line);
       if (code) {
         codes.push({
@@ -59,7 +64,7 @@ export function parseCodesCSV(csvContent: string): Array<{
       }
     }
   }
-  
+
   return codes;
 }
 
@@ -74,17 +79,17 @@ export function parseAttendeesCSV(csvContent: string): Array<{
   checkedInAt?: string;
   approvalStatus?: string;
 }> {
-  const lines = csvContent.split('\n').filter(line => line.trim());
-  
+  const lines = csvContent.split("\n").filter((line) => line.trim());
+
   if (lines.length === 0) {
     return [];
   }
-  
+
   // Parse headers
-  const headers = lines[0].split(',').map(header => 
-    header.trim().replace(/"/g, '').toLowerCase()
-  );
-  
+  const headers = lines[0]
+    .split(",")
+    .map((header) => header.trim().replace(/"/g, "").toLowerCase());
+
   const attendees: Array<{
     name: string;
     email: string;
@@ -93,18 +98,22 @@ export function parseAttendeesCSV(csvContent: string): Array<{
     checkedInAt?: string;
     approvalStatus?: string;
   }> = [];
-  
+
   // Parse data rows
   for (let i = 1; i < lines.length; i++) {
     const values = parseCSVLine(lines[i]);
     const attendee: Record<string, string> = {};
-    
+
     headers.forEach((header, index) => {
-      attendee[header] = values[index] || '';
+      attendee[header] = values[index] || "";
     });
-    
+
     // Only include approved attendees with name and email
-    if (attendee.name && attendee.email && attendee.approval_status === 'approved') {
+    if (
+      attendee.name &&
+      attendee.email &&
+      attendee.approval_status === "approved"
+    ) {
       attendees.push({
         name: attendee.name,
         email: attendee.email,
@@ -115,7 +124,7 @@ export function parseAttendeesCSV(csvContent: string): Array<{
       });
     }
   }
-  
+
   return attendees;
 }
 
@@ -124,22 +133,22 @@ export function parseAttendeesCSV(csvContent: string): Array<{
  */
 function parseCSVLine(line: string): string[] {
   const result: string[] = [];
-  let current = '';
+  let current = "";
   let inQuotes = false;
-  
+
   for (let i = 0; i < line.length; i++) {
     const char = line[i];
-    
+
     if (char === '"') {
       inQuotes = !inQuotes;
-    } else if (char === ',' && !inQuotes) {
+    } else if (char === "," && !inQuotes) {
       result.push(current.trim());
-      current = '';
+      current = "";
     } else {
       current += char;
     }
   }
-  
+
   result.push(current.trim());
   return result;
 }

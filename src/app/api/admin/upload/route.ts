@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/firebase';
-import { collection, addDoc, getDocs, query, where } from 'firebase/firestore';
-import { parseCodesCSV, parseAttendeesCSV } from '@/lib/csv-parser';
+import { NextRequest, NextResponse } from "next/server";
+import { db } from "@/lib/firebase";
+import { collection, addDoc, getDocs, query, where } from "firebase/firestore";
+import { parseCodesCSV, parseAttendeesCSV } from "@/lib/csv-parser";
 
 /**
  * API route for uploading CSV files (codes and attendees)
@@ -9,39 +9,42 @@ import { parseCodesCSV, parseAttendeesCSV } from '@/lib/csv-parser';
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
-    const file = formData.get('file') as File;
-    const type = formData.get('type') as 'codes' | 'attendees';
-    const projectId = formData.get('projectId') as string;
+    const file = formData.get("file") as File;
+    const type = formData.get("type") as "codes" | "attendees";
+    const projectId = formData.get("projectId") as string;
 
     if (!file) {
       return NextResponse.json(
-        { success: false, message: 'No file provided' },
+        { success: false, message: "No file provided" },
         { status: 400 }
       );
     }
 
-    if (!type || !['codes', 'attendees'].includes(type)) {
+    if (!type || !["codes", "attendees"].includes(type)) {
       return NextResponse.json(
-        { success: false, message: 'Invalid upload type' },
+        { success: false, message: "Invalid upload type" },
         { status: 400 }
       );
     }
 
     if (!projectId) {
       return NextResponse.json(
-        { success: false, message: 'Project ID is required' },
+        { success: false, message: "Project ID is required" },
         { status: 400 }
       );
     }
 
     // Read and parse CSV file
     const fileContent = await file.text();
-    
-    if (type === 'codes') {
+
+    if (type === "codes") {
       const parsedCodes = parseCodesCSV(fileContent);
       if (parsedCodes.length === 0) {
         return NextResponse.json(
-          { success: false, message: 'CSV file is empty or contains no valid codes' },
+          {
+            success: false,
+            message: "CSV file is empty or contains no valid codes",
+          },
           { status: 400 }
         );
       }
@@ -50,69 +53,81 @@ export async function POST(request: NextRequest) {
       const parsedAttendees = parseAttendeesCSV(fileContent);
       if (parsedAttendees.length === 0) {
         return NextResponse.json(
-          { success: false, message: 'CSV file is empty or contains no valid attendees' },
+          {
+            success: false,
+            message: "CSV file is empty or contains no valid attendees",
+          },
           { status: 400 }
         );
       }
       return await handleAttendeesUpload(parsedAttendees, projectId);
     }
   } catch (error) {
-    console.error('Upload API error:', error);
+    console.error("Upload API error:", error);
     return NextResponse.json(
-      { success: false, message: 'Upload processing failed' },
+      { success: false, message: "Upload processing failed" },
       { status: 500 }
     );
   }
 }
 
-async function handleCodesUpload(data: Array<{
-  code: string;
-  cursorUrl: string;
-  creator?: string;
-  date?: string;
-}>, projectId: string) {
+async function handleCodesUpload(
+  data: Array<{
+    code: string;
+    cursorUrl: string;
+    creator?: string;
+    date?: string;
+  }>,
+  projectId: string
+) {
   try {
     if (data.length === 0) {
       return NextResponse.json(
-        { success: false, message: 'No valid codes found in CSV' },
+        { success: false, message: "No valid codes found in CSV" },
         { status: 400 }
       );
     }
 
     // Check for existing codes in this project to avoid duplicates
     const existingCodesSnapshot = await getDocs(
-      query(collection(db, 'codes'), where('projectId', '==', projectId))
+      query(collection(db, "codes"), where("projectId", "==", projectId))
     );
     const existingCodes = new Set(
-      existingCodesSnapshot.docs.map(doc => doc.data().code)
+      existingCodesSnapshot.docs.map((doc) => doc.data().code)
     );
 
     // Filter out duplicates
-    const newCodes = data.filter(codeData => !existingCodes.has(codeData.code));
+    const newCodes = data.filter(
+      (codeData) => !existingCodes.has(codeData.code)
+    );
 
     if (newCodes.length === 0) {
       return NextResponse.json(
-        { 
-          success: false, 
-          message: 'All codes already exist in the database',
-          details: { totalProcessed: data.length, duplicates: data.length }
+        {
+          success: false,
+          message: "All codes already exist in the database",
+          details: { totalProcessed: data.length, duplicates: data.length },
         },
         { status: 400 }
       );
     }
 
     // Add new codes to Firestore
-    const promises = newCodes.map(codeData => 
-      addDoc(collection(db, 'codes'), {
+    const promises = newCodes.map((codeData) => {
+      const codeDoc: any = {
         code: codeData.code,
         cursorUrl: codeData.cursorUrl,
-        creator: codeData.creator,
-        date: codeData.date,
         isRedeemed: false,
         projectId: projectId,
-        createdAt: new Date()
-      })
-    );
+        createdAt: new Date(),
+      };
+
+      // Only include optional fields if they exist
+      if (codeData.creator) codeDoc.creator = codeData.creator;
+      if (codeData.date) codeDoc.date = codeData.date;
+
+      return addDoc(collection(db, "codes"), codeDoc);
+    });
 
     await Promise.all(promises);
 
@@ -122,70 +137,80 @@ async function handleCodesUpload(data: Array<{
       details: {
         totalProcessed: data.length,
         newCodes: newCodes.length,
-        duplicatesSkipped: data.length - newCodes.length
-      }
+        duplicatesSkipped: data.length - newCodes.length,
+      },
     });
   } catch (error) {
-    console.error('Codes upload error:', error);
+    console.error("Codes upload error:", error);
     return NextResponse.json(
-      { success: false, message: 'Failed to process codes upload' },
+      { success: false, message: "Failed to process codes upload" },
       { status: 500 }
     );
   }
 }
 
-async function handleAttendeesUpload(data: Array<{
-  name: string;
-  email: string;
-  firstName?: string;
-  lastName?: string;
-  checkedInAt?: string;
-  approvalStatus?: string;
-}>, projectId: string) {
+async function handleAttendeesUpload(
+  data: Array<{
+    name: string;
+    email: string;
+    firstName?: string;
+    lastName?: string;
+    checkedInAt?: string;
+    approvalStatus?: string;
+  }>,
+  projectId: string
+) {
   try {
     if (data.length === 0) {
       return NextResponse.json(
-        { success: false, message: 'No valid attendee data found' },
+        { success: false, message: "No valid attendee data found" },
         { status: 400 }
       );
     }
 
     // Check for existing attendees in this project to avoid duplicates
     const existingAttendeesSnapshot = await getDocs(
-      query(collection(db, 'attendees'), where('projectId', '==', projectId))
+      query(collection(db, "attendees"), where("projectId", "==", projectId))
     );
     const existingEmails = new Set(
-      existingAttendeesSnapshot.docs.map(doc => doc.data().email)
+      existingAttendeesSnapshot.docs.map((doc) => doc.data().email)
     );
 
     // Filter out duplicates
-    const newAttendees = data.filter(attendee => !existingEmails.has(attendee.email));
+    const newAttendees = data.filter(
+      (attendee) => !existingEmails.has(attendee.email)
+    );
 
     if (newAttendees.length === 0) {
       return NextResponse.json(
-        { 
-          success: false, 
-          message: 'All attendees already exist in the database',
-          details: { totalProcessed: data.length, duplicates: data.length }
+        {
+          success: false,
+          message: "All attendees already exist in the database",
+          details: { totalProcessed: data.length, duplicates: data.length },
         },
         { status: 400 }
       );
     }
 
     // Add new attendees to Firestore
-    const promises = newAttendees.map(attendee => 
-      addDoc(collection(db, 'attendees'), {
+    const promises = newAttendees.map((attendee) => {
+      const attendeeDoc: any = {
         name: attendee.name,
         email: attendee.email,
-        firstName: attendee.firstName,
-        lastName: attendee.lastName,
-        checkedInAt: attendee.checkedInAt,
-        approvalStatus: attendee.approvalStatus,
         hasRedeemedCode: false,
         projectId: projectId,
-        createdAt: new Date()
-      })
-    );
+        createdAt: new Date(),
+      };
+
+      // Only include optional fields if they exist
+      if (attendee.firstName) attendeeDoc.firstName = attendee.firstName;
+      if (attendee.lastName) attendeeDoc.lastName = attendee.lastName;
+      if (attendee.checkedInAt) attendeeDoc.checkedInAt = attendee.checkedInAt;
+      if (attendee.approvalStatus)
+        attendeeDoc.approvalStatus = attendee.approvalStatus;
+
+      return addDoc(collection(db, "attendees"), attendeeDoc);
+    });
 
     await Promise.all(promises);
 
@@ -195,13 +220,13 @@ async function handleAttendeesUpload(data: Array<{
       details: {
         totalProcessed: data.length,
         newAttendees: newAttendees.length,
-        duplicatesSkipped: data.length - newAttendees.length
-      }
+        duplicatesSkipped: data.length - newAttendees.length,
+      },
     });
   } catch (error) {
-    console.error('Attendees upload error:', error);
+    console.error("Attendees upload error:", error);
     return NextResponse.json(
-      { success: false, message: 'Failed to process attendees upload' },
+      { success: false, message: "Failed to process attendees upload" },
       { status: 500 }
     );
   }

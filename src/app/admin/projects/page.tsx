@@ -1,12 +1,18 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import type { ProjectSummary } from '@/features/projects/model';
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import type { ProjectSummary } from "@/features/projects/model";
 
 interface CreateProjectForm {
   name: string;
@@ -33,19 +39,20 @@ export default function AdminProjects() {
   const [isLoading, setIsLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [createForm, setCreateForm] = useState<CreateProjectForm>({
-    name: '',
-    description: '',
-    eventDate: '',
-    slug: ''
+    name: "",
+    description: "",
+    eventDate: "",
+    slug: "",
   });
-  
+
   // Deletion state
-  const [deleteConfirmation, setDeleteConfirmation] = useState<DeleteConfirmation | null>(null);
+  const [deleteConfirmation, setDeleteConfirmation] =
+    useState<DeleteConfirmation | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [deleteConfirmText, setDeleteConfirmText] = useState('');
-  
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+
   const router = useRouter();
 
   // Load projects on mount
@@ -56,17 +63,17 @@ export default function AdminProjects() {
   const loadProjects = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/admin/projects');
+      const response = await fetch("/api/admin/projects");
       const result = await response.json();
 
       if (result.success) {
         setProjects(result.data.projects);
       } else {
-        setError('Failed to load projects');
+        setError("Failed to load projects");
       }
     } catch (err) {
-      setError('Failed to load projects');
-      console.error('Project loading error:', err);
+      setError("Failed to load projects");
+      console.error("Project loading error:", err);
     } finally {
       setIsLoading(false);
     }
@@ -74,68 +81,74 @@ export default function AdminProjects() {
 
   const handleSelectProject = (project: ProjectSummary) => {
     // Store selected project in localStorage
-    localStorage.setItem('admin_selected_project', JSON.stringify({
-      id: project.id,
-      name: project.name,
-      slug: project.slug
-    }));
+    localStorage.setItem(
+      "admin_selected_project",
+      JSON.stringify({
+        id: project.id,
+        name: project.name,
+        slug: project.slug,
+      })
+    );
 
     // Navigate to dashboard
-    router.push('/admin/dashboard');
+    router.push("/admin/dashboard");
   };
 
   const generateSlug = (name: string) => {
     return name
       .toLowerCase()
       .trim()
-      .replace(/[^a-z0-9\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '');
+      .replace(/[^a-z0-9\s-]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "");
   };
 
   const handleNameChange = (name: string) => {
-    setCreateForm(prev => ({
+    setCreateForm((prev) => ({
       ...prev,
       name,
-      slug: prev.slug || generateSlug(name) // Auto-generate only if slug is empty
+      slug: prev.slug || generateSlug(name), // Auto-generate only if slug is empty
     }));
   };
 
   const handleCreateProject = async () => {
     setIsCreating(true);
-    setError('');
+    setError("");
 
     try {
-      const response = await fetch('/api/admin/projects', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/admin/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: createForm.name.trim(),
           description: createForm.description.trim(),
           eventDate: createForm.eventDate || null,
           slug: createForm.slug.trim(),
-          status: 'active'
-        })
+          status: "active",
+        }),
       });
 
       const result = await response.json();
 
       if (result.success) {
         // Select the newly created project immediately
-        localStorage.setItem('admin_selected_project', JSON.stringify({
-          id: result.data.id,
-          name: result.data.name,
-          slug: result.data.slug
-        }));
+        localStorage.setItem(
+          "admin_selected_project",
+          JSON.stringify({
+            id: result.data.id,
+            name: result.data.name,
+            slug: result.data.slug,
+          })
+        );
 
-        router.push('/admin/dashboard');
+        router.push("/admin/dashboard");
       } else {
-        setError(result.error || 'Failed to create project');
+        setError(result.error || "Failed to create project");
       }
     } catch (err) {
-      setError('Failed to create project');
-      console.error('Project creation error:', err);
+      setError("Failed to create project");
+      console.error("Project creation error:", err);
     } finally {
       setIsCreating(false);
     }
@@ -146,50 +159,59 @@ export default function AdminProjects() {
     setDeleteConfirmation({
       projectId: project.id,
       projectName: project.name,
-      totalDocuments: project.totalCodes + project.totalAttendees + project.totalRedemptions + 1,
+      totalDocuments:
+        project.totalCodes +
+        project.totalAttendees +
+        project.totalRedemptions +
+        1,
       totalCodes: project.totalCodes,
       totalAttendees: project.totalAttendees,
       totalRedemptions: project.totalRedemptions,
     });
-    setDeleteConfirmText('');
-    setError('');
+    setDeleteConfirmText("");
+    setError("");
   };
 
   const confirmDeletion = async () => {
     if (!deleteConfirmation) return;
-    
+
     setIsDeleting(true);
-    setError('');
+    setError("");
 
     try {
-      const response = await fetch(`/api/admin/projects/${deleteConfirmation.projectId}`, {
-        method: 'DELETE',
-      });
+      const response = await fetch(
+        `/api/admin/projects/${deleteConfirmation.projectId}`,
+        {
+          method: "DELETE",
+        }
+      );
 
       const result = await response.json();
 
       if (result.success) {
         // Remove from local state
-        setProjects(prev => prev.filter(p => p.id !== deleteConfirmation.projectId));
-        
+        setProjects((prev) =>
+          prev.filter((p) => p.id !== deleteConfirmation.projectId)
+        );
+
         // Clear any selection if this was the selected project
-        const selectedProject = localStorage.getItem('admin_selected_project');
+        const selectedProject = localStorage.getItem("admin_selected_project");
         if (selectedProject) {
           const parsed = JSON.parse(selectedProject);
           if (parsed.id === deleteConfirmation.projectId) {
-            localStorage.removeItem('admin_selected_project');
+            localStorage.removeItem("admin_selected_project");
           }
         }
-        
+
         // Close confirmation dialog
         setDeleteConfirmation(null);
-        setDeleteConfirmText('');
+        setDeleteConfirmText("");
       } else {
-        setError(result.error || 'Failed to delete project');
+        setError(result.error || "Failed to delete project");
       }
     } catch (err) {
-      setError('Failed to delete project');
-      console.error('Project deletion error:', err);
+      setError("Failed to delete project");
+      console.error("Project deletion error:", err);
     } finally {
       setIsDeleting(false);
     }
@@ -197,35 +219,39 @@ export default function AdminProjects() {
 
   const cancelDeletion = () => {
     setDeleteConfirmation(null);
-    setDeleteConfirmText('');
-    setError('');
+    setDeleteConfirmText("");
+    setError("");
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('admin_authenticated');
-    localStorage.removeItem('admin_selected_project');
-    router.push('/admin');
+    localStorage.removeItem("admin_authenticated");
+    localStorage.removeItem("admin_selected_project");
+    router.push("/admin");
   };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
-          <p className="mt-2 text-sm text-gray-600">Loading projects...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-foreground mx-auto"></div>
+          <p className="mt-4 text-sm text-muted-foreground">
+            Loading projects...
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-background py-8">
       {/* Header */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Select Project</h1>
-            <p className="text-gray-600">Choose a hackathon or event to manage, or create a new one.</p>
+            <h1 className="text-2xl font-semibold">Select Project</h1>
+            <p className="text-muted-foreground">
+              Choose a hackathon or event to manage, or create a new one.
+            </p>
           </div>
           <Button variant="outline" onClick={handleLogout} size="sm">
             Logout
@@ -233,24 +259,38 @@ export default function AdminProjects() {
         </div>
 
         {error && (
-          <div className="mb-6 text-sm text-red-600 bg-red-50 p-3 rounded">
+          <div className="mb-6 text-sm text-destructive bg-destructive/10 border border-destructive/20 p-3 rounded-lg">
             {error}
           </div>
         )}
 
         <div className="grid gap-6">
           {/* Create New Project Card */}
-          <Card className="border-dashed border-2 border-gray-300 hover:border-gray-400 transition-colors">
+          <Card className="border-dashed border-2 border-border hover:border-muted-foreground/40 transition-colors bg-card">
             <CardContent className="p-6">
               {!showCreateForm ? (
                 <div className="text-center">
-                  <div className="rounded-full bg-gray-100 w-12 h-12 flex items-center justify-center mx-auto mb-4">
-                    <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  <div className="rounded-full bg-secondary w-12 h-12 flex items-center justify-center mx-auto mb-4">
+                    <svg
+                      className="w-6 h-6 text-muted-foreground"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 4v16m8-8H4"
+                      />
                     </svg>
                   </div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Create New Project</h3>
-                  <p className="text-gray-500 mb-4">Start a new hackathon or event project</p>
+                  <h3 className="text-lg font-medium mb-2">
+                    Create New Project
+                  </h3>
+                  <p className="text-muted-foreground mb-4">
+                    Start a new hackathon or event project
+                  </p>
                   <Button onClick={() => setShowCreateForm(true)}>
                     Create Project
                   </Button>
@@ -258,14 +298,19 @@ export default function AdminProjects() {
               ) : (
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
-                    <h3 className="text-lg font-medium text-gray-900">New Project</h3>
-                    <Button 
-                      variant="outline" 
+                    <h3 className="text-lg font-medium">New Project</h3>
+                    <Button
+                      variant="outline"
                       size="sm"
                       onClick={() => {
                         setShowCreateForm(false);
-                        setCreateForm({ name: '', description: '', eventDate: '', slug: '' });
-                        setError('');
+                        setCreateForm({
+                          name: "",
+                          description: "",
+                          eventDate: "",
+                          slug: "",
+                        });
+                        setError("");
                       }}
                     >
                       Cancel
@@ -289,12 +334,18 @@ export default function AdminProjects() {
                       <Input
                         id="project-slug"
                         value={createForm.slug}
-                        onChange={(e) => setCreateForm(prev => ({ ...prev, slug: e.target.value }))}
+                        onChange={(e) =>
+                          setCreateForm((prev) => ({
+                            ...prev,
+                            slug: e.target.value,
+                          }))
+                        }
                         placeholder="hackathon-nyc-dec-2024"
                         required
                       />
-                      <p className="text-xs text-gray-500 mt-1">
-                        Used in URLs. Only lowercase letters, numbers, and hyphens allowed.
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Used in URLs. Only lowercase letters, numbers, and
+                        hyphens allowed.
                       </p>
                     </div>
 
@@ -303,7 +354,12 @@ export default function AdminProjects() {
                       <Input
                         id="project-description"
                         value={createForm.description}
-                        onChange={(e) => setCreateForm(prev => ({ ...prev, description: e.target.value }))}
+                        onChange={(e) =>
+                          setCreateForm((prev) => ({
+                            ...prev,
+                            description: e.target.value,
+                          }))
+                        }
                         placeholder="Brief description of the event"
                       />
                     </div>
@@ -314,7 +370,12 @@ export default function AdminProjects() {
                         id="project-date"
                         type="date"
                         value={createForm.eventDate}
-                        onChange={(e) => setCreateForm(prev => ({ ...prev, eventDate: e.target.value }))}
+                        onChange={(e) =>
+                          setCreateForm((prev) => ({
+                            ...prev,
+                            eventDate: e.target.value,
+                          }))
+                        }
                       />
                     </div>
                   </div>
@@ -322,10 +383,14 @@ export default function AdminProjects() {
                   <div className="flex gap-2 pt-4">
                     <Button
                       onClick={handleCreateProject}
-                      disabled={isCreating || !createForm.name.trim() || !createForm.slug.trim()}
+                      disabled={
+                        isCreating ||
+                        !createForm.name.trim() ||
+                        !createForm.slug.trim()
+                      }
                       className="flex-1"
                     >
-                      {isCreating ? 'Creating...' : 'Create & Select Project'}
+                      {isCreating ? "Creating..." : "Create & Select Project"}
                     </Button>
                   </div>
                 </div>
@@ -336,37 +401,54 @@ export default function AdminProjects() {
           {/* Existing Projects */}
           {projects.length > 0 && (
             <div className="space-y-4">
-              <h2 className="text-lg font-medium text-gray-900">Existing Projects</h2>
+              <h2 className="text-lg font-medium">Existing Projects</h2>
               <div className="grid gap-4">
                 {projects.map((project) => (
-                  <Card key={project.id} className="hover:shadow-md transition-shadow">
+                  <Card
+                    key={project.id}
+                    className="hover:border-muted-foreground/20 transition-colors bg-card border-border"
+                  >
                     <CardContent className="p-6">
                       <div className="flex justify-between items-start">
-                        <div className="flex-1 cursor-pointer" onClick={() => handleSelectProject(project)}>
-                          <h3 className="text-lg font-medium text-gray-900">{project.name}</h3>
+                        <div
+                          className="flex-1 cursor-pointer"
+                          onClick={() => handleSelectProject(project)}
+                        >
+                          <h3 className="text-lg font-medium">
+                            {project.name}
+                          </h3>
                           {project.description && (
-                            <p className="text-gray-600 mt-1">{project.description}</p>
+                            <p className="text-muted-foreground mt-1">
+                              {project.description}
+                            </p>
                           )}
-                          <div className="flex items-center gap-4 mt-3 text-sm text-gray-500">
+                          <div className="flex items-center gap-4 mt-3 text-sm text-muted-foreground">
                             <span>{project.totalCodes} codes</span>
                             <span>{project.totalAttendees} attendees</span>
                             <span>{project.totalRedemptions} redeemed</span>
                             {project.eventDate && (
-                              <span>• {new Date(project.eventDate).toLocaleDateString()}</span>
+                              <span>
+                                •{" "}
+                                {new Date(
+                                  project.eventDate
+                                ).toLocaleDateString()}
+                              </span>
                             )}
                           </div>
                         </div>
                         <div className="ml-4 flex items-center gap-2">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            project.status === 'active' 
-                              ? 'bg-green-100 text-green-800' 
-                              : project.status === 'archived'
-                              ? 'bg-gray-100 text-gray-800'
-                              : 'bg-yellow-100 text-yellow-800'
-                          }`}>
+                          <span
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              project.status === "active"
+                                ? "bg-green-500/10 text-green-400 border border-green-500/20"
+                                : project.status === "archived"
+                                ? "bg-secondary text-muted-foreground border border-border"
+                                : "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20"
+                            }`}
+                          >
                             {project.status}
                           </span>
-                          
+
                           {/* Delete button - only show for non-active projects or if they have no data */}
                           <Button
                             variant="outline"
@@ -375,10 +457,20 @@ export default function AdminProjects() {
                               e.stopPropagation();
                               handleDeleteProject(project);
                             }}
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                            className="text-destructive hover:bg-destructive/10"
                           >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                              />
                             </svg>
                           </Button>
                         </div>
@@ -394,29 +486,38 @@ export default function AdminProjects() {
 
       {/* Delete Confirmation Dialog */}
       {deleteConfirmation && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <Card className="w-full max-w-md">
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+          <Card className="w-full max-w-md border-border bg-card">
             <CardHeader>
-              <CardTitle className="text-red-600">Delete Project</CardTitle>
-              <CardDescription>
-                This action cannot be undone. All project data will be permanently deleted.
+              <CardTitle className="text-destructive">Delete Project</CardTitle>
+              <CardDescription className="text-muted-foreground">
+                This action cannot be undone. All project data will be
+                permanently deleted.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <h4 className="font-medium text-red-800 mb-2">Project: {deleteConfirmation.projectName}</h4>
-                <div className="text-sm text-red-700 space-y-1">
+              <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
+                <h4 className="font-medium text-destructive mb-2">
+                  Project: {deleteConfirmation.projectName}
+                </h4>
+                <div className="text-sm text-muted-foreground space-y-1">
                   <p>• {deleteConfirmation.totalCodes} cursor credit codes</p>
-                  <p>• {deleteConfirmation.totalAttendees} registered attendees</p>
-                  <p>• {deleteConfirmation.totalRedemptions} completed redemptions</p>
-                  <p className="font-medium pt-1 border-t border-red-200">
-                    Total: {deleteConfirmation.totalDocuments} documents will be deleted
+                  <p>
+                    • {deleteConfirmation.totalAttendees} registered attendees
+                  </p>
+                  <p>
+                    • {deleteConfirmation.totalRedemptions} completed
+                    redemptions
+                  </p>
+                  <p className="font-medium pt-1 border-t border-destructive/20 text-destructive">
+                    Total: {deleteConfirmation.totalDocuments} documents will be
+                    deleted
                   </p>
                 </div>
               </div>
 
               <div>
-                <Label htmlFor="confirm-delete" className="text-sm font-medium text-gray-700">
+                <Label htmlFor="confirm-delete" className="text-sm font-medium">
                   Type <strong>DELETE</strong> to confirm:
                 </Label>
                 <Input
@@ -430,7 +531,7 @@ export default function AdminProjects() {
               </div>
 
               {error && (
-                <div className="text-sm text-red-600 bg-red-50 p-3 rounded">
+                <div className="text-sm text-destructive bg-destructive/10 border border-destructive/20 p-3 rounded-lg">
                   {error}
                 </div>
               )}
@@ -446,10 +547,10 @@ export default function AdminProjects() {
                 </Button>
                 <Button
                   onClick={confirmDeletion}
-                  disabled={deleteConfirmText !== 'DELETE' || isDeleting}
-                  className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                  disabled={deleteConfirmText !== "DELETE" || isDeleting}
+                  className="flex-1 bg-destructive hover:bg-destructive/90"
                 >
-                  {isDeleting ? 'Deleting...' : 'Delete Project'}
+                  {isDeleting ? "Deleting..." : "Delete Project"}
                 </Button>
               </div>
             </CardContent>

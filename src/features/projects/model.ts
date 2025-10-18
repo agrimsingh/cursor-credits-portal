@@ -1,24 +1,31 @@
 /**
  * Projects domain models and validation schemas
- * 
+ *
  * Defines the data structure for hackathon/event projects and their validation rules.
  */
 
-import { z } from 'zod';
+import { z } from "zod";
 
 /**
  * Zod schema for a project/event
  */
 export const ProjectSchema = z.object({
-  id: z.string().min(1, 'Project ID is required'),
-  name: z.string().min(1, 'Project name is required').max(100, 'Project name too long'),
-  description: z.string().max(500, 'Description too long').optional(),
+  id: z.string().min(1, "Project ID is required"),
+  name: z
+    .string()
+    .min(1, "Project name is required")
+    .max(100, "Project name too long"),
+  description: z.string().max(500, "Description too long").optional(),
+  location: z.string().max(100, "Location too long").optional(),
   eventDate: z.date().optional(),
-  slug: z.string().min(1, 'Project slug is required').regex(
-    /^[a-z0-9-]+$/,
-    'Slug must contain only lowercase letters, numbers, and hyphens'
-  ),
-  status: z.enum(['active', 'archived', 'draft']).default('active'),
+  slug: z
+    .string()
+    .min(1, "Project slug is required")
+    .regex(
+      /^[a-z0-9-]+$/,
+      "Slug must contain only lowercase letters, numbers, and hyphens"
+    ),
+  status: z.enum(["active", "archived", "draft"]).default("active"),
   createdAt: z.date(),
   updatedAt: z.date(),
   // Stats (computed values)
@@ -60,8 +67,9 @@ export const ProjectSummarySchema = z.object({
   id: z.string(),
   name: z.string(),
   description: z.string().optional(),
+  location: z.string().optional(),
   slug: z.string(),
-  status: z.enum(['active', 'archived', 'draft']),
+  status: z.enum(["active", "archived", "draft"]),
   eventDate: z.date().optional(),
   createdAt: z.date(),
   totalCodes: z.number(),
@@ -78,10 +86,10 @@ export function generateProjectSlug(name: string): string {
   return name
     .toLowerCase()
     .trim()
-    .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
-    .replace(/\s+/g, '-') // Replace spaces with hyphens
-    .replace(/-+/g, '-') // Replace multiple hyphens with single
-    .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
+    .replace(/[^a-z0-9\s-]/g, "") // Remove special characters
+    .replace(/\s+/g, "-") // Replace spaces with hyphens
+    .replace(/-+/g, "-") // Replace multiple hyphens with single
+    .replace(/^-|-$/g, ""); // Remove leading/trailing hyphens
 }
 
 /**

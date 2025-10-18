@@ -1,51 +1,104 @@
 /**
  * Landing page for Cursor Credits Distribution
- * 
- * This is the main entry point where attendees start their code redemption journey.
- * Provides a clear introduction and navigation to the redemption flow.
+ *
+ * Dynamically displays active events and allows attendees to claim credits.
+ * Fetches project data from Firestore to show current events.
  */
 
-export default function Home() {
+interface Project {
+  id: string;
+  name: string;
+  description: string | null;
+  slug: string;
+  eventDate: string | null;
+  location: string | null;
+}
+
+async function getActiveProjects(): Promise<Project[]> {
+  try {
+    const res = await fetch(
+      `${
+        process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
+      }/api/public/projects`,
+      { cache: "no-store" }
+    );
+    const data = await res.json();
+    return data.success ? data.data.projects : [];
+  } catch (error) {
+    console.error("Failed to fetch projects:", error);
+    return [];
+  }
+}
+
+function formatEventDate(dateString: string | null): string {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  return date.toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+export default async function Home() {
+  const projects = await getActiveProjects();
+  const primaryProject = projects[0]; // Show the most recent active project
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
-      <div className="container mx-auto px-4 py-16">
-        <main className="max-w-2xl mx-auto text-center">
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-6 py-24">
+        <main className="max-w-2xl mx-auto">
           {/* Hero Section */}
-          <div className="mb-12">
-            <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+          <div className="mb-16 text-center">
+            <h1 className="text-5xl font-semibold tracking-tight mb-6">
               Claim Your Cursor Credits
             </h1>
-            <p className="text-lg text-gray-600 dark:text-gray-300 mb-8">
-              Thank you for attending our event! Enter your details below to claim your complimentary Cursor credits.
+            <p className="text-lg text-muted-foreground leading-relaxed">
+              Thank you for attending our event! Enter your details below to
+              claim your complimentary Cursor credits.
             </p>
           </div>
 
           {/* Event Info Card */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-8 mb-8">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
-              Sample Hackathon Event
-            </h2>
-            <p className="text-gray-600 dark:text-gray-300 mb-6">
-              Hamburg • August 20, 2025
-            </p>
-            
-            {/* CTA Button */}
-            <a 
-              href="/redeem"
-              className="block w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 text-center"
-            >
-              Start Code Redemption
-            </a>
-          </div>
+          {primaryProject ? (
+            <div className="bg-card border border-border rounded-xl p-8 mb-12 hover:border-muted-foreground/20 transition-colors">
+              <h2 className="text-2xl font-medium mb-3">
+                {primaryProject.name}
+              </h2>
+              <p className="text-muted-foreground mb-6">
+                {primaryProject.location && `${primaryProject.location} • `}
+                {formatEventDate(primaryProject.eventDate)}
+              </p>
+
+              {primaryProject.description && (
+                <p className="text-sm text-muted-foreground mb-8 leading-relaxed">
+                  {primaryProject.description}
+                </p>
+              )}
+
+              {/* CTA Button */}
+              <a
+                href={`/event/${primaryProject.slug}/redeem`}
+                className="flex items-center justify-center w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-3 px-6 rounded-lg transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
+              >
+                Start Code Redemption
+              </a>
+            </div>
+          ) : (
+            <div className="bg-card border border-border rounded-xl p-8 mb-12">
+              <p className="text-muted-foreground text-center">
+                No active events at the moment. Check back soon!
+              </p>
+            </div>
+          )}
 
           {/* Info Section */}
-          <div className="text-sm text-gray-500 dark:text-gray-400">
-            <p className="mb-2">
-              Each attendee can claim one code. You&apos;ll need your name and email address.
-            </p>
+          <div className="text-sm text-muted-foreground text-center space-y-2">
             <p>
-              Having trouble? Contact the event organizers for assistance.
+              Each attendee can claim one code. You&apos;ll need your name and
+              email address.
             </p>
+            <p>Having trouble? Contact the event organizers for assistance.</p>
           </div>
         </main>
       </div>
