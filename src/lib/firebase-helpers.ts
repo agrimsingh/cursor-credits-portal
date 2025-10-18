@@ -136,7 +136,9 @@ export async function redeemCodeForAttendee(
       
       // Create attendee record
       const attendee: Omit<Attendee, 'id'> = {
-        ...attendeeData,
+        name: attendeeData.name,
+        email: attendeeData.email,
+        projectId: attendeeData.eventId, // eventId maps to projectId
         hasRedeemedCode: true,
         redeemedCodeId: codeDoc.id,
         createdAt: now.toDate(),
@@ -145,7 +147,7 @@ export async function redeemCodeForAttendee(
       
       // Create redemption record
       const redemption: Omit<Redemption, 'id'> = {
-        eventId: attendeeData.eventId,
+        projectId: attendeeData.eventId, // eventId maps to projectId
         attendeeId: attendeeRef.id,
         codeId: codeDoc.id,
         attendeeName: attendeeData.name,

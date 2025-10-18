@@ -6,7 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { collection, query, where, getDocs, addDoc, runTransaction, doc } from 'firebase/firestore';
+import { collection, query, where, getDocs, runTransaction, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { AttendeeRedemptionSchema } from '@/features/attendees/model';
 import type { ApiResponse } from '@/lib/types';
@@ -61,7 +61,6 @@ export async function POST(request: NextRequest) {
     }
     
     const attendeeDoc = attendeeSnapshot.docs[0];
-    const attendeeData = attendeeDoc.data();
     
     // Check if already redeemed
     const redemptionsRef = collection(db, 'redemptions');

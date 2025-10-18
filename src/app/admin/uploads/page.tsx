@@ -8,7 +8,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 
 /**
  * Admin page for uploading CSV files (codes and attendees)
@@ -19,7 +18,7 @@ export default function AdminUploads() {
     type: "codes" | "attendees";
     success: boolean;
     message: string;
-    details?: any;
+    details?: Record<string, unknown>;
   } | null>(null);
 
   const handleFileUpload = async (file: File, type: "codes" | "attendees") => {
@@ -61,7 +60,7 @@ export default function AdminUploads() {
         message: result.message,
         details: result.details,
       });
-    } catch (error) {
+      } catch {
       setUploadResults({
         type,
         success: false,
@@ -100,9 +99,9 @@ export default function AdminUploads() {
               <p>
                 <strong>Expected CSV format:</strong>
               </p>
-              <p>• Header row with 'url' column</p>
-              <p>• Each row: cursor.com redemption link</p>
-              <p>• Example: https://cursor.com/redeem/abc123...</p>
+               <p>• Header row with &apos;url&apos; column</p>
+               <p>• Each row: cursor.com redemption link</p>
+               <p>• Example: https://cursor.com/redeem/abc123...</p>
             </div>
           </CardContent>
         </Card>
@@ -130,9 +129,9 @@ export default function AdminUploads() {
               <p>
                 <strong>Expected CSV format:</strong>
               </p>
-              <p>• Header row with 'name' and 'email' columns</p>
-              <p>• Each row: attendee name and email address</p>
-              <p>• Example: John Doe, john@example.com</p>
+               <p>• Header row with &apos;name&apos; and &apos;email&apos; columns</p>
+               <p>• Each row: attendee name and email address</p>
+               <p>• Example: John Doe, john@example.com</p>
             </div>
           </CardContent>
         </Card>
@@ -183,7 +182,7 @@ export default function AdminUploads() {
           <div>
             <h4 className="font-medium text-foreground">Codes CSV:</h4>
             <ul className="list-disc list-inside space-y-1 ml-2">
-              <li>Must have 'url' column header</li>
+              <li>Must have &apos;url&apos; column header</li>
               <li>Each URL should be a complete cursor.com redemption link</li>
               <li>Duplicate codes will be skipped</li>
               <li>Invalid URLs will be reported</li>
@@ -193,7 +192,7 @@ export default function AdminUploads() {
           <div>
             <h4 className="font-medium text-foreground">Attendees CSV:</h4>
             <ul className="list-disc list-inside space-y-1 ml-2">
-              <li>Must have 'name' and 'email' columns</li>
+              <li>Must have &apos;name&apos; and &apos;email&apos; columns</li>
               <li>Email addresses will be validated</li>
               <li>Duplicate entries will be skipped</li>
               <li>Names are case-sensitive for redemption matching</li>

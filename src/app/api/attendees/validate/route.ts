@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function validateNameStep(name: string, projectId: string, validatedData?: any) {
+async function validateNameStep(name: string, projectId: string, validatedData?: { projectId?: string; eventId?: string }) {
   try {
     // Try project-based lookup first
     let attendeesSnapshot = await getDocs(
@@ -56,6 +56,7 @@ async function validateNameStep(name: string, projectId: string, validatedData?:
     // Only fall back to legacy query if we're specifically dealing with legacy eventId
     if (attendeesSnapshot.empty && 
         projectId === 'sample-event-1' && 
+        validatedData &&
         !validatedData.projectId && 
         validatedData.eventId === 'sample-event-1') {
       attendeesSnapshot = await getDocs(
@@ -109,7 +110,7 @@ async function validateNameStep(name: string, projectId: string, validatedData?:
   }
 }
 
-async function validateEmailStep(name: string, email: string, projectId: string, validatedData?: any) {
+async function validateEmailStep(name: string, email: string, projectId: string, validatedData?: { projectId?: string; eventId?: string }) {
   try {
     // Try project-based lookup first
     let attendeesSnapshot = await getDocs(

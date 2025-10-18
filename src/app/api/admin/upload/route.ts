@@ -114,7 +114,7 @@ async function handleCodesUpload(
 
     // Add new codes to Firestore
     const promises = newCodes.map((codeData) => {
-      const codeDoc: any = {
+      const codeDoc: Record<string, unknown> = {
         code: codeData.code,
         cursorUrl: codeData.cursorUrl,
         isRedeemed: false,
@@ -194,7 +194,7 @@ async function handleAttendeesUpload(
 
     // Add new attendees to Firestore
     const promises = newAttendees.map((attendee) => {
-      const attendeeDoc: any = {
+      const attendeeDoc: Record<string, unknown> = {
         name: attendee.name,
         email: attendee.email,
         hasRedeemedCode: false,

@@ -211,7 +211,7 @@ export function RedemptionForm({ projectId }: RedemptionFormProps = {}) {
               value={name}
               onChange={setName}
               onAttendeeSelect={handleAttendeeSelect}
-              error={currentStep === 'name' ? error : undefined}
+              error={currentStep === 'name' && error ? error : undefined}
               disabled={currentStep !== 'name' || isLoading}
               projectId={projectId}
             />

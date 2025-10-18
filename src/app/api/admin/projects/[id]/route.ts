@@ -3,7 +3,6 @@ import { db } from '@/lib/firebase';
 import { 
   doc, 
   getDoc, 
-  deleteDoc, 
   updateDoc, 
   collection, 
   getDocs, 
@@ -18,9 +17,9 @@ import { UpdateProjectSchema } from '@/features/projects/model';
  * API routes for individual project operations (GET, PUT, DELETE)
  */
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const projectId = params.id;
+    const { id: projectId } = await params;
     const projectDoc = await getDoc(doc(db, 'projects', projectId));
     
     if (!projectDoc.exists()) {
@@ -50,9 +49,9 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const projectId = params.id;
+    const { id: projectId } = await params;
     const body = await request.json();
     
     // Validate input data
@@ -86,9 +85,9 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
  * Deletes a project and ALL associated data (codes, attendees, redemptions)
  * This provides the natural data cleanup functionality
  */
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const projectId = params.id;
+    const { id: projectId } = await params;
 
     // Verify project exists
     const projectDoc = await getDoc(doc(db, 'projects', projectId));

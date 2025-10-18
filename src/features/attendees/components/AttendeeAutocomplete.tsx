@@ -168,7 +168,7 @@ export function AttendeeAutocomplete({
       {isOpen && value.length >= 2 && suggestions.length === 0 && !isLoading && (
         <div className="absolute z-50 mt-1 w-full rounded-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg">
           <div className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
-            No attendees found matching "{value}"
+            No attendees found matching &quot;{value}&quot;
           </div>
         </div>
       )}

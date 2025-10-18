@@ -21,6 +21,7 @@ export function useAttendees(projectId?: string) {
 
   useEffect(() => {
     fetchAttendees();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId]);
 
   const fetchAttendees = async () => {
