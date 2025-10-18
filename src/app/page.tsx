@@ -5,6 +5,9 @@
  * Fetches project data from Firestore to show current events.
  */
 
+import { db } from "@/lib/firebase";
+import { collection, getDocs, query, where } from "firebase/firestore";
+
 interface Project {
   id: string;
   name: string;
@@ -16,19 +19,37 @@ interface Project {
 
 async function getActiveProjects(): Promise<Project[]> {
   try {
-    const res = await fetch(
-      `${
-        process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
-      }/api/public/projects`,
-      { cache: "no-store" }
-    );
-    const data = await res.json();
-    return data.success ? data.data.projects : [];
+    // Fetch directly from Firestore on server-side for better performance
+    const projectsRef = collection(db, "projects");
+    const activeQuery = query(projectsRef, where("status", "==", "active"));
+    const snapshot = await getDocs(activeQuery);
+
+    const projects: Project[] = snapshot.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        name: data.name || "",
+        description: data.description || null,
+        slug: data.slug || "",
+        eventDate: data.eventDate || null,
+        location: data.location || null,
+      };
+    });
+
+    // Sort by event date (most recent first)
+    return projects.sort((a, b) => {
+      if (!a.eventDate) return 1;
+      if (!b.eventDate) return -1;
+      return new Date(b.eventDate).getTime() - new Date(a.eventDate).getTime();
+    });
   } catch (error) {
     console.error("Failed to fetch projects:", error);
     return [];
   }
 }
+
+// Revalidate every 60 seconds to keep data fresh
+export const revalidate = 60;
 
 function formatEventDate(dateString: string | null): string {
   if (!dateString) return "";
