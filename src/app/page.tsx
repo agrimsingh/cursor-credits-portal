@@ -26,12 +26,28 @@ async function getActiveProjects(): Promise<Project[]> {
 
     const projects: Project[] = snapshot.docs.map((doc) => {
       const data = doc.data();
+      
+      // Convert Firestore Timestamp to ISO string
+      let eventDateStr: string | null = null;
+      if (data.eventDate) {
+        try {
+          // Handle both Timestamp objects and string dates
+          if (data.eventDate.toDate) {
+            eventDateStr = data.eventDate.toDate().toISOString();
+          } else if (typeof data.eventDate === 'string') {
+            eventDateStr = data.eventDate;
+          }
+        } catch (e) {
+          console.error('Error converting eventDate:', e);
+        }
+      }
+      
       return {
         id: doc.id,
         name: data.name || "",
         description: data.description || null,
         slug: data.slug || "",
-        eventDate: data.eventDate || null,
+        eventDate: eventDateStr,
         location: data.location || null,
       };
     });
